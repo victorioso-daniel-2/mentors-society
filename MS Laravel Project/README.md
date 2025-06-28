@@ -4,7 +4,7 @@ A Laravel-based web application with Vue.js frontend and Tailwind CSS styling.
 
 ## 🚀 Tech Stack
 
-- **Backend**: Laravel 12
+- **Backend**: Laravel 10
 - **Frontend**: Vue.js 3
 - **Styling**: Tailwind CSS v4
 - **Build Tool**: Vite
@@ -14,7 +14,7 @@ A Laravel-based web application with Vue.js frontend and Tailwind CSS styling.
 
 Before you begin, ensure you have the following installed on your machine:
 
-- **PHP** (version 8.2 or higher)
+- **PHP** (version 8.1 or higher)
 - **Composer** (PHP package manager)
 - **Node.js** (version 18 or higher)
 - **npm** (comes with Node.js)
@@ -128,10 +128,17 @@ php artisan test --filter=ExampleTest
 ```
 MS Laravel Project/
 ├── app/                    # Laravel application logic
-│   ├── Http/Controllers/   # Controllers
-│   │   └── Providers/         # Service providers
+│   ├── Console/           # Console commands
+│   ├── Exceptions/        # Exception handling
+│   ├── Http/              # HTTP layer
+│   │   ├── Controllers/   # Controllers
+│   │   └── Middleware/    # Middleware
 │   ├── Models/            # Eloquent models
 │   └── Providers/         # Service providers
+├── bootstrap/             # Application bootstrap
+├── config/                # Configuration files
+├── database/              # Database files
+├── public/                # Public assets
 ├── resources/
 │   ├── css/
 │   │   └── app.css        # Main CSS file with Tailwind imports
@@ -142,7 +149,11 @@ MS Laravel Project/
 │   └── views/
 │       └── welcome.blade.php  # Main Blade template
 ├── routes/
+│   ├── api.php            # API routes
+│   ├── console.php        # Console routes
 │   └── web.php            # Web routes
+├── storage/               # Application storage
+├── tests/                 # Test files
 ├── vite.config.js         # Vite configuration
 ├── tailwind.config.js     # Tailwind CSS configuration
 ├── postcss.config.cjs     # PostCSS configuration
