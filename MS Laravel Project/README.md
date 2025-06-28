@@ -1,270 +1,66 @@
-# Mentor Society System
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-A Laravel-based web application with Vue.js frontend and Tailwind CSS styling.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## 🚀 Tech Stack
+## About Laravel
 
-- **Backend**: Laravel 10
-- **Frontend**: Vue.js 3
-- **Styling**: Tailwind CSS v4
-- **Build Tool**: Vite
-- **Package Manager**: npm
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-## 📋 Prerequisites
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Before you begin, ensure you have the following installed on your machine:
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-- **PHP** (version 8.1 or higher)
-- **Composer** (PHP package manager)
-- **Node.js** (version 18 or higher)
-- **npm** (comes with Node.js)
-- **Git**
+## Learning Laravel
 
-### Installation Links:
-- [PHP](https://www.php.net/downloads.php)
-- [Composer](https://getcomposer.org/download/)
-- [Node.js](https://nodejs.org/)
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## 🛠️ Project Setup
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-### Step 1: Clone the Repository
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-```bash
-git clone <your-repository-url>
-cd mentors-society
-cd "MS Laravel Project"
-```
+## Laravel Sponsors
 
-### Step 2: Install PHP Dependencies
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-```bash
-composer install
-```
+### Premium Partners
 
-### Step 3: Environment Configuration
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-1. Copy the environment file:
-```bash
-cp .env.example .env
-```
+## Contributing
 
-2. Generate application key:
-```bash
-php artisan key:generate
-```
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-3. Configure your database in the `.env` file:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=mentor_society
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
+## Code of Conduct
 
-### Step 4: Install Node.js Dependencies
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-```bash
-npm install
-```
+## Security Vulnerabilities
 
-### Step 5: Database Setup
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-1. Create your database (if using MySQL):
-```sql
-CREATE DATABASE mentor_society;
-```
+## License
 
-2. Run migrations:
-```bash
-php artisan migrate
-```
-
-3. (Optional) Seed the database:
-```bash
-php artisan db:seed
-```
-
-## 🚀 Running the Application
-
-### Development Mode
-
-You need to run both the Laravel server and Vite development server simultaneously.
-
-#### Terminal 1: Start Laravel Server
-```bash
-php artisan serve
-```
-This will start the Laravel server at `http://127.0.0.1:8000`
-
-#### Terminal 2: Start Vite Development Server
-```bash
-npm run dev
-```
-This will start the Vite development server (usually at `http://localhost:5173` or `http://localhost:5174`)
-
-### Production Build
-
-To build the assets for production:
-```bash
-npm run build
-```
-
-## 🧪 Testing
-
-### Running Tests
-```bash
-php artisan test
-```
-
-### Running Specific Test Files
-```bash
-php artisan test --filter=ExampleTest
-```
-
-## 📁 Project Structure
-
-```
-MS Laravel Project/
-├── app/                    # Laravel application logic
-│   ├── Console/           # Console commands
-│   ├── Exceptions/        # Exception handling
-│   ├── Http/              # HTTP layer
-│   │   ├── Controllers/   # Controllers
-│   │   └── Middleware/    # Middleware
-│   ├── Models/            # Eloquent models
-│   └── Providers/         # Service providers
-├── bootstrap/             # Application bootstrap
-├── config/                # Configuration files
-├── database/              # Database files
-├── public/                # Public assets
-├── resources/
-│   ├── css/
-│   │   └── app.css        # Main CSS file with Tailwind imports
-│   ├── js/
-│   │   ├── app.js         # Main JavaScript entry point
-│   │   └── components/
-│   │       └── App.vue    # Main Vue component
-│   └── views/
-│       └── welcome.blade.php  # Main Blade template
-├── routes/
-│   ├── api.php            # API routes
-│   ├── console.php        # Console routes
-│   └── web.php            # Web routes
-├── storage/               # Application storage
-├── tests/                 # Test files
-├── vite.config.js         # Vite configuration
-├── tailwind.config.js     # Tailwind CSS configuration
-├── postcss.config.cjs     # PostCSS configuration
-└── package.json           # Node.js dependencies
-```
-
-## 🎨 Tailwind CSS Configuration
-
-This project uses **Tailwind CSS v4** with the following configuration:
-
-### Key Files:
-- `tailwind.config.js` - Tailwind configuration
-- `postcss.config.cjs` - PostCSS configuration
-- `resources/css/app.css` - Main CSS file with Tailwind imports
-
-### Tailwind CSS v4 Setup:
-The project uses the new Tailwind CSS v4 syntax:
-```css
-@import "tailwindcss";
-```
-
-Instead of the old v3 syntax:
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues:
-
-#### 1. Styles Not Loading
-- Ensure both servers are running (Laravel + Vite)
-- Check browser console for errors
-- Verify `@vite` directive is in your Blade template
-- Clear browser cache
-
-#### 2. Vite Port Already in Use
-If you see "Port 5173 is in use", Vite will automatically try the next available port.
-
-#### 3. Node Modules Issues
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-#### 4. Composer Issues
-```bash
-composer clear-cache
-composer install
-```
-
-#### 5. Laravel Cache Issues
-```bash
-php artisan cache:clear
-php artisan config:clear
-php artisan view:clear
-```
-
-### Browser Developer Tools:
-1. Open browser developer tools (F12)
-2. Check the Console tab for JavaScript errors
-3. Check the Network tab to ensure CSS/JS files are loading
-4. Check the Elements tab to see if Tailwind classes are applied
-
-## 📝 Development Workflow
-
-1. **Start Development Servers**:
-   ```bash
-   # Terminal 1
-   php artisan serve
-   
-   # Terminal 2
-   npm run dev
-   ```
-
-2. **Make Changes**:
-   - Edit Vue components in `resources/js/components/`
-   - Edit CSS in `resources/css/app.css`
-   - Edit Blade templates in `resources/views/`
-
-3. **View Changes**:
-   - Open `http://127.0.0.1:8000` in your browser
-   - Changes will automatically reload
-
-## 🚀 Deployment
-
-### Building for Production:
-```bash
-npm run build
-```
-
-### Environment Variables:
-Ensure all production environment variables are set in your `.env` file.
-
-## 📞 Support
-
-If you encounter any issues:
-1. Check the troubleshooting section above
-2. Review Laravel, Vue.js, and Tailwind CSS documentation
-3. Check browser console for error messages
-4. Ensure all prerequisites are properly installed
-
-## 📚 Useful Links
-
-- [Laravel Documentation](https://laravel.com/docs)
-- [Vue.js Documentation](https://vuejs.org/guide/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Vite Documentation](https://vitejs.dev/guide/)
-
----
-
-**Happy Coding! 🎉**
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
