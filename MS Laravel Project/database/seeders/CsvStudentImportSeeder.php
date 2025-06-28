@@ -32,10 +32,19 @@ class CsvStudentImportSeeder extends Seeder
 
         $dataDirectory = database_path('seeders/data');
         
-        $academicYear = DB::table('academic_year')->firstOrCreate(
-            ['description' => 'AY 2024-2025'],
-            ['start_date' => '2024-08-01', 'end_date' => '2025-07-31']
-        );
+        // Check if academic year exists, if not create it
+        $academicYear = DB::table('academic_year')
+            ->where('description', 'AY 2024-2025')
+            ->first();
+            
+        if (!$academicYear) {
+            $academicYearId = DB::table('academic_year')->insertGetId([
+                'description' => 'AY 2024-2025',
+                'start_date' => '2024-08-01',
+                'end_date' => '2025-07-31'
+            ]);
+            $academicYear = DB::table('academic_year')->where('academic_year_id', $academicYearId)->first();
+        }
 
         foreach ($csvFiles as $fileName) {
             $filePath = $dataDirectory . '/' . $fileName;
@@ -101,6 +110,7 @@ class CsvStudentImportSeeder extends Seeder
                             'last_name' => $parsedName['last_name'],
                             'email' => $email,
                             'created_at' => now(),
+                            'updated_at' => now(),
                         ]);
 
                         $studentId = DB::table('student')->insertGetId([
@@ -109,10 +119,16 @@ class CsvStudentImportSeeder extends Seeder
                         ]);
 
                         $class = DB::table('class')->where('class_name', $classInfo['course'])->first();
-                        $classId = $class->class_id ?? DB::table('class')->insertGetId([
-                            'class_name' => $classInfo['course'],
-                            'academic_year_id' => $academicYear->academic_year_id,
-                        ]);
+                        $classId = null;
+                        
+                        if ($class) {
+                            $classId = $class->class_id;
+                        } else {
+                            $classId = DB::table('class')->insertGetId([
+                                'class_name' => $classInfo['course'],
+                                'academic_year_id' => $academicYear->academic_year_id,
+                            ]);
+                        }
 
                         DB::table('student_class')->insert([
                             'student_id' => $studentId,
