@@ -20,7 +20,7 @@ Note: The database design avoids many-to-many relationships to maintain simplici
 ### User and Role Management
 
 #### Entities
-- **USER**: Stores core user information
+- **USER**: Stores core user information (first_name, middle_initial, last_name, email)
 - **ROLE**: Defines available roles and base permissions
 - **ROLE_PERMISSION**: Maps granular permissions to roles
 - **USER_ROLE**: Tracks role assignments with time periods

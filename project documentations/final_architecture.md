@@ -40,7 +40,7 @@ The system follows a three-layer architecture:
 The database design follows normalization principles while avoiding many-to-many relationships for simplicity:
 
 ### Key Tables
-1. **Users**: Core user information and authentication
+1. **Users**: Core user information (first_name, middle_initial, last_name) and authentication
 2. **Roles**: Predefined roles with permissions
 3. **User_Roles**: Links users to roles with academic year tracking
 4. **Permissions**: Granular access controls
