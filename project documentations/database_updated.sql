@@ -1,6 +1,14 @@
+-- =============================================
+-- Mentors Society Database Schema
+-- =============================================
+
 -- Creating database
 CREATE DATABASE mentors_society;
 USE mentors_society;
+
+-- =============================================
+-- Core Tables
+-- =============================================
 
 -- ACADEMIC_YEAR: Defines academic year boundaries
 CREATE TABLE ACADEMIC_YEAR (
@@ -10,6 +18,10 @@ CREATE TABLE ACADEMIC_YEAR (
     description VARCHAR(100),
     UNIQUE (start_date, end_date)
 );
+
+-- =============================================
+-- User and Role Management
+-- =============================================
 
 -- PERMISSION: Individual system permissions
 CREATE TABLE PERMISSION (
@@ -35,12 +47,17 @@ CREATE TABLE ROLE_PERMISSION (
     FOREIGN KEY (permission_id) REFERENCES PERMISSION(permission_id) ON DELETE CASCADE
 );
 
--- USER: Stores user information (base table for all users)
+-- USER: Base user table for all system users
+-- This implements a role specialization pattern where USER contains common attributes
+-- and specialized tables (like STUDENT) extend it with role-specific attributes
 CREATE TABLE USER (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    middle_initial VARCHAR(5),
     email VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- USER_ROLE: Tracks role assignments with time periods
@@ -67,6 +84,10 @@ CREATE TABLE USER_ROLE_PERMISSION (
     FOREIGN KEY (permission_id) REFERENCES PERMISSION(permission_id) ON DELETE CASCADE
 );
 
+-- =============================================
+-- Student Management
+-- =============================================
+
 -- CLASS: Defines class groupings (e.g., BSED MATH, BSED ENGLISH)
 CREATE TABLE CLASS (
     class_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,7 +96,8 @@ CREATE TABLE CLASS (
     FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id) ON DELETE RESTRICT
 );
 
--- STUDENT: Stores student details (extends USER)
+-- STUDENT: Extends USER with student-specific attributes
+-- This table implements the role specialization pattern
 CREATE TABLE STUDENT (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
@@ -94,6 +116,10 @@ CREATE TABLE STUDENT_CLASS (
     FOREIGN KEY (class_id) REFERENCES CLASS(class_id) ON DELETE RESTRICT,
     FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id) ON DELETE RESTRICT
 );
+
+-- =============================================
+-- Event Management
+-- =============================================
 
 -- EVENT_STATUS: Tracks event lifecycle
 CREATE TABLE EVENT_STATUS (
@@ -150,6 +176,10 @@ CREATE TABLE EVENT_EVALUATION (
     FOREIGN KEY (participation_id) REFERENCES EVENT_PARTICIPATION(participation_id) ON DELETE CASCADE
 );
 
+-- =============================================
+-- Sponsor Management
+-- =============================================
+
 -- SPONSOR: Stores sponsor details
 CREATE TABLE SPONSOR (
     sponsor_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -165,6 +195,10 @@ CREATE TABLE EVENT_SPONSOR (
     FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE CASCADE,
     FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id) ON DELETE CASCADE
 );
+
+-- =============================================
+-- Communication and Task Management
+-- =============================================
 
 -- SOCIAL_MEDIA: Tracks organization's social media accounts
 CREATE TABLE SOCIAL_MEDIA (
@@ -188,6 +222,10 @@ CREATE TABLE TASK (
     FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE SET NULL,
     FOREIGN KEY (officer_id) REFERENCES USER(user_id) ON DELETE SET NULL
 );
+
+-- =============================================
+-- Financial Management
+-- =============================================
 
 -- TRANSACTION_TYPE: Categorizes transactions
 CREATE TABLE TRANSACTION_TYPE (
@@ -221,6 +259,10 @@ CREATE TABLE FINANCIAL_RECORD (
     FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE SET NULL,
     FOREIGN KEY (transaction_id) REFERENCES TRANSACTION(transaction_id) ON DELETE CASCADE
 );
+
+-- =============================================
+-- Inventory Management
+-- =============================================
 
 -- INVENTORY_ITEM: Tracks organization assets
 CREATE TABLE INVENTORY_ITEM (
@@ -259,6 +301,10 @@ CREATE TABLE ITEM_BORROWING (
     FOREIGN KEY (condition_id_return) REFERENCES ITEM_CONDITION(condition_id) ON DELETE SET NULL
 );
 
+-- =============================================
+-- Auditing
+-- =============================================
+
 -- TRANSACTION_LOG: Comprehensive audit trail
 CREATE TABLE TRANSACTION_LOG (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -272,9 +318,9 @@ CREATE TABLE TRANSACTION_LOG (
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE SET NULL
 );
 
--- =====================
--- INDEXES & CONSTRAINTS
--- =====================
+-- =============================================
+-- Indexes for Performance Optimization
+-- =============================================
 
 -- USER table
 CREATE UNIQUE INDEX idx_user_email ON USER(email);
@@ -291,21 +337,17 @@ CREATE INDEX idx_userrole_academicyearid ON USER_ROLE(academic_year_id);
 -- USER_ROLE_PERMISSION table
 CREATE INDEX idx_userrolepermission_userroleid ON USER_ROLE_PERMISSION(user_role_id);
 CREATE INDEX idx_userrolepermission_permissionid ON USER_ROLE_PERMISSION(permission_id);
-CREATE INDEX idx_userrolepermission_userroleid_permissionid ON USER_ROLE_PERMISSION(user_role_id, permission_id);
 
 -- ROLE_PERMISSION table
 CREATE INDEX idx_rolepermission_roleid ON ROLE_PERMISSION(role_id);
 CREATE INDEX idx_rolepermission_permissionid ON ROLE_PERMISSION(permission_id);
-CREATE INDEX idx_rolepermission_roleid_permissionid ON ROLE_PERMISSION(role_id, permission_id);
 
 -- STUDENT_CLASS table
 CREATE INDEX idx_studentclass_studentid ON STUDENT_CLASS(student_id);
 CREATE INDEX idx_studentclass_classid ON STUDENT_CLASS(class_id);
 CREATE INDEX idx_studentclass_academicyearid ON STUDENT_CLASS(academic_year_id);
-CREATE INDEX idx_studentclass_studentid_classid ON STUDENT_CLASS(student_id, class_id);
 
 -- CLASS table
-CREATE UNIQUE INDEX idx_class_classname ON CLASS(class_name);
 CREATE INDEX idx_class_academicyearid ON CLASS(academic_year_id);
 
 -- EVENT table
@@ -332,9 +374,6 @@ CREATE INDEX idx_transaction_verifiedby ON TRANSACTION(verified_by);
 -- FINANCIAL_RECORD table
 CREATE INDEX idx_financialrecord_eventid ON FINANCIAL_RECORD(event_id);
 CREATE INDEX idx_financialrecord_transactionid ON FINANCIAL_RECORD(transaction_id);
-
--- INVENTORY_ITEM table
-CREATE UNIQUE INDEX idx_inventoryitem_itemname ON INVENTORY_ITEM(item_name);
 
 -- ITEM_CONDITION table
 CREATE INDEX idx_itemcondition_itemid ON ITEM_CONDITION(item_id);

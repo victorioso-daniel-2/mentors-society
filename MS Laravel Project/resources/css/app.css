@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+body {
+  @apply bg-black text-yellow-400 flex items-center justify-center min-h-screen text-center;
+}
+
+h1 {
+  @apply text-5xl font-extrabold animate-pulse mb-4;
+}
+
+p {
+  @apply text-lg tracking-wider;
+}
