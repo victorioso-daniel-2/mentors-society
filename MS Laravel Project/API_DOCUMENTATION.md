@@ -2,9 +2,59 @@
 
 ## 📋 **Overview**
 
-The Mentors Society API provides authentication and user management endpoints for the organization's web application. This documentation covers all available endpoints, request/response formats, and integration examples.
+The Mentors Society API provides authentication and user management endpoints for the organization's web application. This documentation covers all available endpoints, request/response formats, and integration examples for Vue 3 + Tailwind CSS frontend.
 
 **Base URL**: `http://localhost:8000/api` (or your domain)
+
+---
+
+## 🎨 **Frontend Integration Notes (Vue 3 + Tailwind)**
+
+### General Guidelines
+- All API endpoints are RESTful and return JSON
+- Use `fetch` or `axios` in Vue 3 for API calls
+- Use Tailwind CSS for UI feedback (error/success messages, loading states)
+- All protected endpoints require the `Authorization: Bearer {token}` header
+- Store the Bearer token securely (Vuex, Pinia, or localStorage)
+- Handle 401 errors globally to redirect to login
+- Use API responses to show success/error notifications with Tailwind classes
+
+### Example Vue 3 API Service
+```javascript
+// api.js
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+})
+
+// Add token to requests
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Handle 401 errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default api
+```
 
 ---
 
@@ -95,6 +145,30 @@ Authenticate user with student number and password.
 {
     "success": false,
     "message": "Student number not found"
+}
+```
+
+**Frontend Integration**:
+```javascript
+// Vue 3 Component Example
+const login = async () => {
+  try {
+    const response = await api.post('/auth/login', {
+      student_number: form.student_number,
+      password: form.password
+    })
+    
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.data.user))
+      // Show success message with Tailwind
+      showNotification('Login successful!', 'success')
+      router.push('/dashboard')
+    }
+  } catch (error) {
+    // Show error message with Tailwind
+    showNotification(error.response?.data?.message || 'Login failed', 'error')
+  }
 }
 ```
 
@@ -203,58 +277,41 @@ Authorization: Bearer 1|712b9f1c207a86b56ab8a98a2638e291d1ca8de8986fa3aa3ffade25
 ```json
 {
     "success": true,
-    "message": "Logout successful"
+    "message": "Logged out successfully"
 }
 ```
 
-**Error Response** (401 Unauthorized):
-```json
-{
-    "success": false,
-    "message": "Not authenticated"
-}
-```
-
----
-
-### 6. **Refresh Token**
-Generate new token and invalidate current one.
-
-**Endpoint**: `POST /api/auth/refresh`
-
-**Headers**:
-```
-Authorization: Bearer 1|712b9f1c207a86b56ab8a98a2638e291d1ca8de8986fa3aa3ffade2526ba1366
-```
-
-**Response** (200 OK):
-```json
-{
-    "success": true,
-    "message": "Token refreshed successfully",
-    "data": {
-        "token": "2|new_token_here",
-        "token_type": "Bearer"
-    }
+**Frontend Integration**:
+```javascript
+const logout = async () => {
+  try {
+    await api.post('/auth/logout')
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    router.push('/login')
+    showNotification('Logged out successfully', 'success')
+  } catch (error) {
+    showNotification('Logout failed', 'error')
+  }
 }
 ```
 
 ---
 
-### 7. **Change Password**
+### 6. **Change Password**
 Change user's password.
 
 **Endpoint**: `POST /api/auth/change-password`
 
 **Headers**:
 ```
-Authorization: Bearer 1|712b9f1c207a86b56ab8a98a2638e291d1ca8de8986fa3aa3ffade2526ba1366
+Authorization: Bearer {token}
 ```
 
 **Request Body**:
 ```json
 {
-    "current_password": "JanellaAnneBoncodin",
+    "current_password": "oldpassword",
     "new_password": "newpassword123",
     "new_password_confirmation": "newpassword123"
 }
@@ -268,391 +325,861 @@ Authorization: Bearer 1|712b9f1c207a86b56ab8a98a2638e291d1ca8de8986fa3aa3ffade25
 }
 ```
 
-**Error Response** (401 Unauthorized):
+---
+
+## 👥 **User Management**
+
+### 7. **List Users**
+Get all users with optional filtering.
+
+**Endpoint**: `GET /api/users`
+
+**Query Parameters**:
+- `search` (optional): Search by name or email
+- `role` (optional): Filter by role name
+- `active` (optional): Filter by active status
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "data": [
+            {
+                "id": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "john@example.com",
+                "full_name": "John Doe",
+                "student_number": "2021-0001-TG-0",
+                "roles": [
+                    {
+                        "role_id": 1,
+                        "role_name": "Student",
+                        "academic_year_id": 1
+                    }
+                ]
+            }
+        ],
+        "current_page": 1,
+        "total": 1
+    },
+    "message": "Users retrieved successfully"
+}
+```
+
+### 8. **Get User**
+Get specific user by ID.
+
+**Endpoint**: `GET /api/users/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com",
+        "full_name": "John Doe",
+        "student_number": "2021-0001-TG-0",
+        "roles": [...]
+    },
+    "message": "User retrieved successfully"
+}
+```
+
+### 9. **Create User**
+Create a new user.
+
+**Endpoint**: `POST /api/users`
+
+**Request Body**:
+```json
+{
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com",
+    "password": "password123",
+    "password_confirmation": "password123"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane@example.com",
+        "full_name": "Jane Smith"
+    },
+    "message": "User created successfully"
+}
+```
+
+### 10. **Update User**
+Update user information.
+
+**Endpoint**: `PUT /api/users/{id}`
+
+**Request Body**:
+```json
+{
+    "first_name": "Jane",
+    "last_name": "Johnson",
+    "email": "jane.johnson@example.com"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Johnson",
+        "email": "jane.johnson@example.com",
+        "full_name": "Jane Johnson"
+    },
+    "message": "User updated successfully"
+}
+```
+
+### 11. **Delete User**
+Delete a user.
+
+**Endpoint**: `DELETE /api/users/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "User deleted successfully"
+}
+```
+
+### 12. **Get User Roles**
+Get all roles assigned to a user.
+
+**Endpoint**: `GET /api/users/{id}/roles`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "user_role_id": 1,
+            "role_id": 1,
+            "role_name": "Student",
+            "description": "Regular student role",
+            "academic_year_id": 1,
+            "start_date": "2024-06-01T00:00:00.000000Z",
+            "end_date": null,
+            "is_active": true
+        }
+    ],
+    "message": "User roles retrieved successfully"
+}
+```
+
+### 13. **Assign Role to User**
+Assign a role to a user.
+
+**Endpoint**: `POST /api/users/{id}/roles`
+
+**Request Body**:
+```json
+{
+    "role_id": 1,
+    "academic_year_id": 1,
+    "start_date": "2024-06-01",
+    "end_date": "2025-05-31"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "user_role_id": 2,
+        "role_id": 1,
+        "role_name": "Student",
+        "academic_year_id": 1,
+        "start_date": "2024-06-01",
+        "end_date": "2025-05-31"
+    },
+    "message": "Role assigned successfully"
+}
+```
+
+### 14. **Remove Role from User**
+Remove a role from a user.
+
+**Endpoint**: `DELETE /api/users/{id}/roles/{roleId}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "Role removed successfully"
+}
+```
+
+### 15. **Get Users by Role**
+Get all users with a specific role.
+
+**Endpoint**: `GET /api/users/role/{roleName}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@example.com",
+            "full_name": "John Doe",
+            "student_number": "2021-0001-TG-0",
+            "roles": [...]
+        }
+    ],
+    "message": "Users retrieved successfully"
+}
+```
+
+### 16. **Search Users**
+Search users by name or email.
+
+**Endpoint**: `GET /api/users-search`
+
+**Query Parameters**:
+- `query` (required): Search term (minimum 2 characters)
+- `limit` (optional): Number of results (default: 10)
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@example.com",
+            "full_name": "John Doe",
+            "student_number": "2021-0001-TG-0"
+        }
+    ],
+    "message": "Users found successfully"
+}
+```
+
+---
+
+## 🎭 **Role & Permission Management**
+
+### 17. **List Roles**
+Get all roles.
+
+**Endpoint**: `GET /api/roles`
+
+**Query Parameters**:
+- `search` (optional): Search by role name
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "data": [
+            {
+                "role_id": 1,
+                "role_name": "President",
+                "description": "Organization President",
+                "role_priority": 1,
+                "permissions": [
+                    {
+                        "permission_id": 1,
+                        "permission_name": "user.view",
+                        "description": "View users"
+                    }
+                ]
+            }
+        ],
+        "current_page": 1,
+        "total": 1
+    },
+    "message": "Roles retrieved successfully"
+}
+```
+
+### 18. **Get Role**
+Get specific role by ID.
+
+**Endpoint**: `GET /api/roles/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "role_id": 1,
+        "role_name": "President",
+        "description": "Organization President",
+        "role_priority": 1,
+        "permissions": [...]
+    },
+    "message": "Role retrieved successfully"
+}
+```
+
+### 19. **Create Role**
+Create a new role.
+
+**Endpoint**: `POST /api/roles`
+
+**Request Body**:
+```json
+{
+    "role_name": "Secretary",
+    "description": "Organization Secretary",
+    "role_priority": 5,
+    "permissions": [1, 2, 3]
+}
+```
+
+**Response** (201 Created):
+```json
+{
+    "success": true,
+    "data": {
+        "role_id": 2,
+        "role_name": "Secretary",
+        "description": "Organization Secretary",
+        "role_priority": 5,
+        "permissions": [...]
+    },
+    "message": "Role created successfully"
+}
+```
+
+### 20. **Update Role**
+Update role information.
+
+**Endpoint**: `PUT /api/roles/{id}`
+
+**Request Body**:
+```json
+{
+    "role_name": "Senior Secretary",
+    "description": "Senior Organization Secretary",
+    "role_priority": 4
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "role_id": 2,
+        "role_name": "Senior Secretary",
+        "description": "Senior Organization Secretary",
+        "role_priority": 4
+    },
+    "message": "Role updated successfully"
+}
+```
+
+### 21. **Delete Role**
+Delete a role.
+
+**Endpoint**: `DELETE /api/roles/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "Role deleted successfully"
+}
+```
+
+### 22. **Get Role Permissions**
+Get all permissions for a role.
+
+**Endpoint**: `GET /api/roles/{id}/permissions`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "permission_id": 1,
+            "permission_name": "user.view",
+            "description": "View users"
+        }
+    ],
+    "message": "Role permissions retrieved successfully"
+}
+```
+
+### 23. **Assign Permissions to Role**
+Assign permissions to a role.
+
+**Endpoint**: `POST /api/roles/{id}/permissions`
+
+**Request Body**:
+```json
+{
+    "permissions": [1, 2, 3, 4]
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "Permissions assigned successfully"
+}
+```
+
+### 24. **Get All Permissions**
+Get all available permissions.
+
+**Endpoint**: `GET /api/roles/permissions/all`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "permission_id": 1,
+            "permission_name": "user.view",
+            "description": "View users"
+        },
+        {
+            "permission_id": 2,
+            "permission_name": "user.create",
+            "description": "Create users"
+        }
+    ],
+    "message": "Permissions retrieved successfully"
+}
+```
+
+---
+
+## 🎓 **Student Management**
+
+### 25. **List Students**
+Get all students with optional filtering.
+
+**Endpoint**: `GET /api/students`
+
+**Query Parameters**:
+- `search` (optional): Search by name or student number
+- `class_id` (optional): Filter by class
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "data": [
+            {
+                "student_id": 1,
+                "student_number": "2021-0001-TG-0",
+                "user": {
+                    "user_id": 1,
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john@example.com"
+                }
+            }
+        ],
+        "current_page": 1,
+        "total": 1
+    },
+    "message": "Students retrieved successfully"
+}
+```
+
+### 26. **Get Student**
+Get specific student by ID.
+
+**Endpoint**: `GET /api/students/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "student_id": 1,
+        "student_number": "2021-0001-TG-0",
+        "user": {
+            "user_id": 1,
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@example.com"
+        }
+    },
+    "message": "Student retrieved successfully"
+}
+```
+
+### 27. **Create Student**
+Create a new student.
+
+**Endpoint**: `POST /api/students`
+
+**Request Body**:
+```json
+{
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "middle_initial": "A",
+    "email": "jane@example.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "student_number": "2021-0002-TG-0",
+    "classes": [
+        {
+            "class_id": 1,
+            "academic_year_id": 1,
+            "year_level": "First Year"
+        }
+    ]
+}
+```
+
+**Response** (201 Created):
+```json
+{
+    "success": true,
+    "data": {
+        "student_id": 2,
+        "student_number": "2021-0002-TG-0",
+        "user": {
+            "user_id": 2,
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "email": "jane@example.com"
+        }
+    },
+    "message": "Student created successfully"
+}
+```
+
+### 28. **Update Student**
+Update student information.
+
+**Endpoint**: `PUT /api/students/{id}`
+
+**Request Body**:
+```json
+{
+    "first_name": "Jane",
+    "last_name": "Johnson",
+    "email": "jane.johnson@example.com",
+    "student_number": "2021-0002-TG-0"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": {
+        "student_id": 2,
+        "student_number": "2021-0002-TG-0",
+        "user": {
+            "user_id": 2,
+            "first_name": "Jane",
+            "last_name": "Johnson",
+            "email": "jane.johnson@example.com"
+        }
+    },
+    "message": "Student updated successfully"
+}
+```
+
+### 29. **Delete Student**
+Delete a student.
+
+**Endpoint**: `DELETE /api/students/{id}`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "Student deleted successfully"
+}
+```
+
+### 30. **Get Student Classes**
+Get all classes a student is enrolled in.
+
+**Endpoint**: `GET /api/students/{id}/classes`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "student_id": 1,
+            "class_id": 1,
+            "academic_year_id": 1,
+            "year_level": "First Year",
+            "class": {
+                "class_id": 1,
+                "class_name": "BSED MATH"
+            },
+            "academic_year": {
+                "academic_year_id": 1,
+                "start_date": "2024-06-01",
+                "end_date": "2025-05-31"
+            }
+        }
+    ],
+    "message": "Student classes retrieved successfully"
+}
+```
+
+### 31. **Assign Class to Student**
+Assign a class to a student.
+
+**Endpoint**: `POST /api/students/{id}/classes`
+
+**Request Body**:
+```json
+{
+    "class_id": 1,
+    "academic_year_id": 1,
+    "year_level": "Second Year"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+    "success": true,
+    "data": {
+        "student_id": 1,
+        "class_id": 1,
+        "academic_year_id": 1,
+        "year_level": "Second Year",
+        "class": {
+            "class_id": 1,
+            "class_name": "BSED MATH"
+        },
+        "academic_year": {
+            "academic_year_id": 1,
+            "start_date": "2024-06-01",
+            "end_date": "2025-05-31"
+        }
+    },
+    "message": "Class assigned successfully"
+}
+```
+
+### 32. **Remove Class from Student**
+Remove a class assignment from a student.
+
+**Endpoint**: `DELETE /api/students/{id}/classes`
+
+**Request Body**:
+```json
+{
+    "class_id": 1,
+    "academic_year_id": 1
+}
+```
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "message": "Class assignment removed successfully"
+}
+```
+
+### 33. **Get Available Classes**
+Get all available classes.
+
+**Endpoint**: `GET /api/students/classes/available`
+
+**Response** (200 OK):
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "class_id": 1,
+            "class_name": "BSED MATH",
+            "academic_year_id": 1,
+            "academic_year": {
+                "academic_year_id": 1,
+                "start_date": "2024-06-01",
+                "end_date": "2025-05-31"
+            }
+        }
+    ],
+    "message": "Available classes retrieved successfully"
+}
+```
+
+---
+
+## 🚨 **Error Handling**
+
+### Common Error Responses
+
+#### **400 Bad Request**
 ```json
 {
     "success": false,
-    "message": "Current password is incorrect"
+    "message": "Validation failed",
+    "errors": {
+        "field_name": ["Error message"]
+    }
+}
+```
+
+#### **401 Unauthorized**
+```json
+{
+    "success": false,
+    "message": "Not authenticated"
+}
+```
+
+#### **403 Forbidden**
+```json
+{
+    "success": false,
+    "message": "Insufficient permissions"
+}
+```
+
+#### **404 Not Found**
+```json
+{
+    "success": false,
+    "message": "Resource not found"
+}
+```
+
+#### **500 Internal Server Error**
+```json
+{
+    "success": false,
+    "message": "Internal server error",
+    "error": "Error details"
 }
 ```
 
 ---
 
-## 🎯 **Frontend Integration Examples**
+## 📊 **Current API Capabilities Summary**
 
-### **JavaScript/Fetch API**
+### **✅ Implemented Features**
 
-#### Login Example
-```javascript
-async function login(studentNumber, password) {
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                student_number: studentNumber,
-                password: password
-            })
-        });
+#### **Authentication System**
+- ✅ Login with student number and password
+- ✅ Logout functionality
+- ✅ Password reset (forgot/reset)
+- ✅ Change password
+- ✅ Get current user info
+- ✅ Token-based authentication (Sanctum)
 
-        const data = await response.json();
+#### **User Management**
+- ✅ Full CRUD operations for users
+- ✅ User search functionality
+- ✅ Role assignment/removal
+- ✅ Get user roles
+- ✅ Get users by role
 
-        if (data.success) {
-            // Store token in localStorage or secure storage
-            localStorage.setItem('auth_token', data.data.token);
-            localStorage.setItem('user', JSON.stringify(data.data.user));
-            
-            // Redirect to dashboard
-            window.location.href = '/dashboard';
-        } else {
-            // Handle error
-            alert(data.message);
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('Login failed. Please try again.');
-    }
-}
+#### **Role & Permission Management**
+- ✅ Full CRUD operations for roles
+- ✅ Permission assignment to roles
+- ✅ Get role permissions
+- ✅ Get all permissions
+- ✅ Role-based access control
 
-// Usage
-login('2021-00112-TG-0', 'JanellaAnneBoncodin');
-```
+#### **Student Management**
+- ✅ Full CRUD operations for students
+- ✅ Student-class enrollment management
+- ✅ Get student classes
+- ✅ Get available classes
+- ✅ Class assignment/removal
 
-#### Protected API Call Example
-```javascript
-async function getCurrentUser() {
-    const token = localStorage.getItem('auth_token');
-    
-    if (!token) {
-        // Redirect to login
-        window.location.href = '/login';
-        return;
-    }
+#### **Security & Middleware**
+- ✅ Route protection with `auth:sanctum`
+- ✅ Authentication validation
+- ✅ Input validation and sanitization
+- ✅ Error handling and logging
 
-    try {
-        const response = await fetch('/api/auth/me', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json',
-            }
-        });
+### **🔄 Frontend Integration Status**
 
-        const data = await response.json();
+#### **Ready for Vue 3 + Tailwind**
+- ✅ All endpoints return consistent JSON responses
+- ✅ Proper HTTP status codes
+- ✅ Comprehensive error handling
+- ✅ Authentication flow documented
+- ✅ Example API service provided
 
-        if (data.success) {
-            return data.data.user;
-        } else {
-            // Token might be expired
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
-        }
-    } catch (error) {
-        console.error('Error fetching user:', error);
-    }
-}
-```
-
-#### Logout Example
-```javascript
-async function logout() {
-    const token = localStorage.getItem('auth_token');
-    
-    try {
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json',
-            }
-        });
-
-        // Clear local storage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        
-        // Redirect to login
-        window.location.href = '/login';
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-}
-```
-
-### **Axios Example**
-```javascript
-import axios from 'axios';
-
-// Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:8000/api';
-axios.defaults.headers.common['Accept'] = 'application/json';
-
-// Add request interceptor to include token
-axios.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// Add response interceptor to handle token expiration
-axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
-        }
-        return Promise.reject(error);
-    }
-);
-
-// API functions
-export const authAPI = {
-    login: (studentNumber, password) => 
-        axios.post('/auth/login', { student_number: studentNumber, password }),
-    
-    logout: () => 
-        axios.post('/auth/logout'),
-    
-    getCurrentUser: () => 
-        axios.get('/auth/me'),
-    
-    changePassword: (currentPassword, newPassword) => 
-        axios.post('/auth/change-password', {
-            current_password: currentPassword,
-            new_password: newPassword,
-            new_password_confirmation: newPassword
-        })
-};
-```
-
-### **Vue.js Example**
-```javascript
-// store/auth.js
-import { defineStore } from 'pinia';
-import { authAPI } from '@/api/auth';
-
-export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        user: null,
-        token: localStorage.getItem('auth_token') || null,
-        isAuthenticated: false
-    }),
-
-    actions: {
-        async login(studentNumber, password) {
-            try {
-                const response = await authAPI.login(studentNumber, password);
-                const { token, user } = response.data.data;
-                
-                this.token = token;
-                this.user = user;
-                this.isAuthenticated = true;
-                
-                localStorage.setItem('auth_token', token);
-                localStorage.setItem('user', JSON.stringify(user));
-                
-                return { success: true };
-            } catch (error) {
-                return { 
-                    success: false, 
-                    message: error.response?.data?.message || 'Login failed' 
-                };
-            }
-        },
-
-        async logout() {
-            try {
-                await authAPI.logout();
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                this.token = null;
-                this.user = null;
-                this.isAuthenticated = false;
-                
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
-            }
-        },
-
-        async getCurrentUser() {
-            try {
-                const response = await authAPI.getCurrentUser();
-                this.user = response.data.data.user;
-                this.isAuthenticated = true;
-                return this.user;
-            } catch (error) {
-                this.logout();
-                throw error;
-            }
-        }
-    }
-});
-```
-
-### **React Example**
-```javascript
-// hooks/useAuth.js
-import { useState, useEffect, createContext, useContext } from 'react';
-import axios from 'axios';
-
-const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('auth_token'));
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (token) {
-            getCurrentUser();
-        } else {
-            setLoading(false);
-        }
-    }, [token]);
-
-    const login = async (studentNumber, password) => {
-        try {
-            const response = await axios.post('/api/auth/login', {
-                student_number: studentNumber,
-                password: password
-            });
-
-            const { token: newToken, user: userData } = response.data.data;
-            
-            setToken(newToken);
-            setUser(userData);
-            localStorage.setItem('auth_token', newToken);
-            
-            return { success: true };
-        } catch (error) {
-            return { 
-                success: false, 
-                message: error.response?.data?.message || 'Login failed' 
-            };
-        }
-    };
-
-    const logout = async () => {
-        try {
-            await axios.post('/api/auth/logout', {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            setToken(null);
-            setUser(null);
-            localStorage.removeItem('auth_token');
-        }
-    };
-
-    const getCurrentUser = async () => {
-        try {
-            const response = await axios.get('/api/auth/me', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setUser(response.data.data.user);
-        } catch (error) {
-            logout();
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <AuthContext.Provider value={{ 
-            user, 
-            token, 
-            loading, 
-            login, 
-            logout, 
-            isAuthenticated: !!token 
-        }}>
-            {children}
-        </AuthContext.Provider>
-    );
-};
-
-export const useAuth = () => useContext(AuthContext);
-```
+#### **Recommended Frontend Features**
+- User authentication pages (login, logout, password reset)
+- User management dashboard
+- Role and permission management interface
+- Student management system
+- Class enrollment interface
+- Search and filter functionality
+- Responsive design with Tailwind CSS
 
 ---
 
-## 🛡️ **Security Considerations**
+## 🚀 **Next Steps**
 
-### **Token Storage**
-- Store tokens in `localStorage` for development
-- Use `httpOnly` cookies for production
-- Implement token refresh mechanism
-- Clear tokens on logout
+### **For Frontend Development**
+1. Set up Vue 3 project with Tailwind CSS
+2. Implement authentication flow
+3. Create API service layer
+4. Build user management interfaces
+5. Implement role and permission management
+6. Create student management system
+7. Add search and filter functionality
 
-### **Error Handling**
-- Always handle 401 responses (token expired/invalid)
-- Implement automatic logout on authentication errors
-- Show user-friendly error messages
-
-### **Password Requirements**
-- Minimum 6 characters
-- Consider implementing password strength requirements
-- Use HTTPS in production
-
----
-
-## 📊 **Status Codes**
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request (Validation Error) |
-| 401 | Unauthorized (Invalid Token/Credentials) |
-| 404 | Not Found |
-| 422 | Validation Error |
-| 500 | Internal Server Error |
+### **For Backend Development**
+1. Implement remaining controllers (Events, Sponsors, etc.)
+2. Add more granular permissions
+3. Implement audit logging
+4. Add API rate limiting
+5. Enhance error handling
+6. Add API documentation with Swagger/OpenAPI
 
 ---
 
-## 🔧 **Testing**
+## 📞 **Support**
 
-### **Using Postman/Insomnia**
-1. Set base URL: `http://localhost:8000/api`
-2. For protected endpoints, add header: `Authorization: Bearer {token}`
-3. Set `Content-Type: application/json` for POST requests
+For questions or issues with the API:
+- Check the error responses for specific details
+- Ensure proper authentication headers are included
+- Verify request body format matches examples
+- Test endpoints with tools like Postman or curl
 
-### **Using cURL**
-```bash
-# Login
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"student_number":"2021-00112-TG-0","password":"JanellaAnneBoncodin"}'
-
-# Get user info (with token)
-curl -X GET http://localhost:8000/api/auth/me \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
-
----
-
-## 📝 **Notes**
-
-- All timestamps are in Manila timezone (Asia/Manila)
-- Student numbers follow the format: `YYYY-NNNNN-TG-0`
-- Passwords are hashed using Laravel's Hash facade
-- Tokens are generated using Laravel Sanctum
-- All responses include a `success` boolean field
-
----
-
-*Last Updated: June 30, 2025* 
+**API Version**: v1.0  
+**Last Updated**: June 2024  
+**Status**: Phase 1 Complete ✅ 

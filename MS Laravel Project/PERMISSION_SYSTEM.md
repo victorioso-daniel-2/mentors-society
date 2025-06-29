@@ -6,21 +6,22 @@ The Mentors Society application implements a comprehensive role-based access con
 
 ## 🏛️ **Role Hierarchy (Priority Levels)**
 
-| Role                           | Priority | Description                              |
-|--------------------------------|----------|------------------------------------------|
-| President                      | 1        | Organization President (All permissions) |
-| Vice President for Internal Affairs | 2    | VP for Internal Affairs                  |
-| Vice President for External Affairs | 3     | VP for External Affairs                  |
-| Secretary General              | 4        | Secretary General                        |
-| Assistant Secretary            | 5        | Assistant Secretary                      |
-| Treasurer                      | 6        | Organization Treasurer                   |
-| Auditor                        | 7        | Organization Auditor                     |
+| Role                           | Priority | Description                             |
+|--------------------------------|----------|-----------------------------------------|
+| President                      | 1        | Organization President (All permissions)|
+| VPI                            | 2        | VP for Internal Affairs                 |
+| VpEx                           | 3        | VP for External Affairs                 |
+| Secretary General              | 4        | Secretary General                       |
+| Assistant Secretary            | 5        | Assistant Secretary                     |
+| Treasurer                      | 6        | Organization Treasurer                  |
+| Auditor                        | 7        | Organization Auditor                    |
 | PRO - Math                     | 8        | Public Relations Officer for Math       |
 | PRO - English                  | 9        | Public Relations Officer for English    |
 | Business Manager - Math        | 10       | Business Manager for Math               |
 | Business Manager - English     | 11       | Business Manager for English            |
-| MS Representative              | 12       | MS Representative                        |
-| Student                        | 99       | Regular Student Member                   |
+| MS Representative              | 12       | MS Representative                       |
+| Student                        | 99       | Regular Student Member                  |
+| Class President                | 20       | Class President                         |
 
 ## 📋 **Permission Categories**
 
@@ -90,9 +91,16 @@ The Mentors Society application implements a comprehensive role-based access con
 - `academic_year.view` - View academic years
 - `academic_year.create` - Create academic years
 - `academic_year.edit` - Edit academic years
+- `academic_year.delete` - Delete academic years
 - `class.view` - View classes
 - `class.create` - Create classes
 - `class.edit` - Edit class information
+- `class.delete` - Delete classes
+- `class.edit_own` - Edit own class record (Class President only)
+- `class.manage_students` - Update student status (graduate, dropped, etc.) in own class
+- `class.manage_subjects` - Manage subjects for own class
+- `class.manage_schedules` - Manage schedules for own class
+- `class.manage_professors` - Manage professors for own class
 
 ### 🔧 **System Administration**
 - `system.view_logs` - View system logs
@@ -126,7 +134,7 @@ The Mentors Society application implements a comprehensive role-based access con
 - Complete user and student management
 - Event registration management
 - Task coordination
-- Academic year and class management
+- **Full academic year and class management (view, create, edit, delete)**
 - CSV import capabilities
 - Reporting access
 
@@ -134,7 +142,7 @@ The Mentors Society application implements a comprehensive role-based access con
 - User and student viewing/editing
 - Event registration management
 - Task completion
-- Academic year and class viewing/editing
+- **Full academic year and class management (view, create, edit, delete)**
 - Basic reporting
 
 ### 💰 **Treasurer (Priority 6)**
@@ -188,6 +196,12 @@ The Mentors Society application implements a comprehensive role-based access con
 - Complete assigned tasks
 - View inventory items
 - Basic system access
+
+### 🏅 **Class President (Priority 20)**
+- Can edit their own class record
+- Can update student status (graduate, dropped, etc.) for their class
+- Can manage subjects, schedules, and professors for their class
+- Cannot manage other classes or system-wide settings
 
 ## 🔄 **Permission Resolution Logic**
 

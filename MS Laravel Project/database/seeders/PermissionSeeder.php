@@ -116,12 +116,13 @@ class PermissionSeeder extends Seeder
             ['permission_name' => 'academic_year.delete', 'description' => 'Delete academic years'],
 
             // =============================================
-            // CLASS MANAGEMENT PERMISSIONS
+            // CLASS MANAGEMENT PERMISSIONS (EXTENDED FOR CLASS PRESIDENT)
             // =============================================
-            ['permission_name' => 'class.view', 'description' => 'View classes'],
-            ['permission_name' => 'class.create', 'description' => 'Create new classes'],
-            ['permission_name' => 'class.edit', 'description' => 'Edit class information'],
-            ['permission_name' => 'class.delete', 'description' => 'Delete classes'],
+            ['permission_name' => 'class.edit_own', 'description' => 'Edit own class record'],
+            ['permission_name' => 'class.manage_students', 'description' => 'Update student status (graduate, dropped, etc.) in own class'],
+            ['permission_name' => 'class.manage_subjects', 'description' => 'Manage subjects for own class'],
+            ['permission_name' => 'class.manage_schedules', 'description' => 'Manage schedules for own class'],
+            ['permission_name' => 'class.manage_professors', 'description' => 'Manage professors for own class'],
         ];
 
         // Create all permissions
@@ -180,50 +181,56 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // VICE PRESIDENT FOR INTERNAL AFFAIRS PERMISSIONS
+        // (Similar to President except role assignment and sponsor management)
         // =============================================
         $vpInternalRole = Role::where('role_name', 'Vice President for Internal Affairs')->first();
         $vpInternalPermissions = [
-            'user.view', 'user.edit',
-            'student.view', 'student.edit', 'student.manage_classes',
-            'event.view', 'event.create', 'event.edit', 'event.manage_registrations', 'event.manage_participants', 'event.view_evaluations',
-            'financial.view', 'financial.create', 'financial.edit', 'financial.verify',
-            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.manage_borrowings',
-            'sponsor.view', 'sponsor.create', 'sponsor.edit', 'sponsor.assign_events',
-            'task.view', 'task.create', 'task.edit', 'task.assign', 'task.complete',
-            'report.view', 'report.generate', 'report.dashboard',
-            'academic_year.view', 'class.view', 'class.create', 'class.edit'
+            'user.view', 'user.create', 'user.edit', 'user.delete',
+            'student.view', 'student.create', 'student.edit', 'student.delete', 'student.manage_classes', 'student.import_csv',
+            'event.view', 'event.create', 'event.edit', 'event.delete', 'event.manage_registrations', 'event.manage_participants', 'event.view_evaluations', 'event.export_data',
+            'financial.view', 'financial.create', 'financial.edit', 'financial.delete', 'financial.verify', 'financial.export', 'financial.view_receipts',
+            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete', 'inventory.manage_borrowings', 'inventory.record_conditions', 'inventory.export',
+            'task.view', 'task.create', 'task.edit', 'task.delete', 'task.assign', 'task.complete',
+            'report.view', 'report.generate', 'report.export', 'report.dashboard',
+            'system.view_logs', 'system.backup',
+            'academic_year.view', 'academic_year.create', 'academic_year.edit', 'academic_year.delete',
+            'class.view', 'class.create', 'class.edit', 'class.delete'
         ];
         $this->assignPermissionsToRole($vpInternalRole, $vpInternalPermissions);
 
         // =============================================
         // VICE PRESIDENT FOR EXTERNAL AFFAIRS PERMISSIONS
+        // (Focus on external relations and sponsors)
         // =============================================
         $vpExternalRole = Role::where('role_name', 'Vice President for External Affairs')->first();
         $vpExternalPermissions = [
             'event.view', 'event.create', 'event.edit', 'event.manage_registrations', 'event.manage_participants',
-            'sponsor.view', 'sponsor.create', 'sponsor.edit', 'sponsor.assign_events',
+            'sponsor.view', 'sponsor.create', 'sponsor.edit', 'sponsor.delete', 'sponsor.assign_events',
             'task.view', 'task.create', 'task.edit', 'task.assign', 'task.complete',
-            'report.view', 'report.generate',
+            'report.view', 'report.generate', 'report.export', 'report.dashboard',
             'financial.view', 'financial.create', 'financial.edit'
         ];
         $this->assignPermissionsToRole($vpExternalRole, $vpExternalPermissions);
 
         // =============================================
         // SECRETARY GENERAL PERMISSIONS
+        // (Event management - create events, assign event heads, full student/user management, academic management)
         // =============================================
         $secretaryGeneralRole = Role::where('role_name', 'Secretary General')->first();
         $secretaryGeneralPermissions = [
-            'user.view', 'user.create', 'user.edit',
-            'student.view', 'student.create', 'student.edit', 'student.manage_classes', 'student.import_csv',
-            'event.view', 'event.create', 'event.edit', 'event.manage_registrations', 'event.manage_participants',
+            'user.view', 'user.create', 'user.edit', 'user.delete',
+            'student.view', 'student.create', 'student.edit', 'student.delete', 'student.manage_classes', 'student.import_csv',
+            'event.view', 'event.create', 'event.edit', 'event.delete', 'event.manage_registrations', 'event.manage_participants', 'event.view_evaluations', 'event.export_data',
             'task.view', 'task.create', 'task.edit', 'task.assign', 'task.complete',
-            'report.view', 'report.generate',
-            'academic_year.view', 'class.view', 'class.create', 'class.edit'
+            'report.view', 'report.generate', 'report.export', 'report.dashboard',
+            'academic_year.view', 'academic_year.create', 'academic_year.edit', 'academic_year.delete',
+            'class.view', 'class.create', 'class.edit', 'class.delete'
         ];
         $this->assignPermissionsToRole($secretaryGeneralRole, $secretaryGeneralPermissions);
 
         // =============================================
         // ASSISTANT SECRETARY PERMISSIONS
+        // (Support administrative tasks, academic management)
         // =============================================
         $assistantSecretaryRole = Role::where('role_name', 'Assistant Secretary')->first();
         $assistantSecretaryPermissions = [
@@ -231,17 +238,19 @@ class PermissionSeeder extends Seeder
             'student.view', 'student.edit', 'student.manage_classes',
             'event.view', 'event.edit', 'event.manage_registrations',
             'task.view', 'task.edit', 'task.complete',
-            'report.view', 'report.generate',
-            'academic_year.view', 'class.view', 'class.edit'
+            'report.view', 'report.generate', 'report.dashboard',
+            'academic_year.view', 'academic_year.create', 'academic_year.edit', 'academic_year.delete',
+            'class.view', 'class.create', 'class.edit', 'class.delete'
         ];
         $this->assignPermissionsToRole($assistantSecretaryRole, $assistantSecretaryPermissions);
 
         // =============================================
         // TREASURER PERMISSIONS
+        // (Financial management focus)
         // =============================================
         $treasurerRole = Role::where('role_name', 'Treasurer')->first();
         $treasurerPermissions = [
-            'financial.view', 'financial.create', 'financial.edit', 'financial.verify', 'financial.export', 'financial.view_receipts',
+            'financial.view', 'financial.create', 'financial.edit', 'financial.delete', 'financial.verify', 'financial.export', 'financial.view_receipts',
             'event.view', 'event.view_evaluations',
             'report.view', 'report.generate', 'report.export',
             'sponsor.view', 'sponsor.create', 'sponsor.edit'
@@ -250,6 +259,7 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // AUDITOR PERMISSIONS
+        // (Oversight and verification focus)
         // =============================================
         $auditorRole = Role::where('role_name', 'Auditor')->first();
         $auditorPermissions = [
@@ -263,6 +273,7 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // PRO - MATH PERMISSIONS
+        // (Public relations for Math department)
         // =============================================
         $proMathRole = Role::where('role_name', 'PRO - Math')->first();
         $proMathPermissions = [
@@ -275,6 +286,7 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // PRO - ENGLISH PERMISSIONS
+        // (Public relations for English department)
         // =============================================
         $proEnglishRole = Role::where('role_name', 'PRO - English')->first();
         $proEnglishPermissions = [
@@ -287,30 +299,33 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // BUSINESS MANAGER - MATH PERMISSIONS
+        // (Business operations for Math department)
         // =============================================
         $businessManagerMathRole = Role::where('role_name', 'Business Manager - Math')->first();
         $businessManagerMathPermissions = [
-            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.manage_borrowings', 'inventory.record_conditions', 'inventory.export',
+            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete', 'inventory.manage_borrowings', 'inventory.record_conditions', 'inventory.export',
             'financial.view', 'financial.create', 'financial.edit',
             'sponsor.view', 'sponsor.create', 'sponsor.edit',
-            'report.view', 'report.generate'
+            'report.view', 'report.generate', 'report.export'
         ];
         $this->assignPermissionsToRole($businessManagerMathRole, $businessManagerMathPermissions);
 
         // =============================================
         // BUSINESS MANAGER - ENGLISH PERMISSIONS
+        // (Business operations for English department)
         // =============================================
         $businessManagerEnglishRole = Role::where('role_name', 'Business Manager - English')->first();
         $businessManagerEnglishPermissions = [
-            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.manage_borrowings', 'inventory.record_conditions', 'inventory.export',
+            'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete', 'inventory.manage_borrowings', 'inventory.record_conditions', 'inventory.export',
             'financial.view', 'financial.create', 'financial.edit',
             'sponsor.view', 'sponsor.create', 'sponsor.edit',
-            'report.view', 'report.generate'
+            'report.view', 'report.generate', 'report.export'
         ];
         $this->assignPermissionsToRole($businessManagerEnglishRole, $businessManagerEnglishPermissions);
 
         // =============================================
         // MS REPRESENTATIVE PERMISSIONS
+        // (Representation and coordination)
         // =============================================
         $msRepresentativeRole = Role::where('role_name', 'MS Representative')->first();
         $msRepresentativePermissions = [
@@ -322,14 +337,33 @@ class PermissionSeeder extends Seeder
 
         // =============================================
         // STUDENT PERMISSIONS (BASIC PERMISSIONS)
+        // (Can view events and inventory, edit own profile, no task access)
         // =============================================
         $studentRole = Role::where('role_name', 'Student')->first();
         $studentPermissions = [
+            'user.edit', // Can edit their own profile
             'event.view',
-            'task.view', 'task.complete',
             'inventory.view'
         ];
         $this->assignPermissionsToRole($studentRole, $studentPermissions);
+
+        // =============================================
+        // CLASS PRESIDENT PERMISSIONS
+        // (Can edit own class, manage student status, subjects, schedules, professors)
+        // =============================================
+        $classPresidentRole = Role::firstOrCreate([
+            'role_name' => 'Class President',
+            'description' => 'Class President',
+            'role_priority' => 20
+        ]);
+        $classPresidentPermissions = [
+            'class.edit_own',
+            'class.manage_students',
+            'class.manage_subjects',
+            'class.manage_schedules',
+            'class.manage_professors'
+        ];
+        $this->assignPermissionsToRole($classPresidentRole, $classPresidentPermissions);
     }
 
     /**

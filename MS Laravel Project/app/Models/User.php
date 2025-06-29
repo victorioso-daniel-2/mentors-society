@@ -12,11 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Model
+class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'USER';
+    protected $table = 'user';
     protected $primaryKey = 'user_id';
     public $timestamps = true;
 
@@ -145,7 +145,7 @@ class User extends Model
      */
     public function hasRole(string $roleName): bool
     {
-        return $this->roles()->where('role_name', $roleName)->exists();
+        return $this->roles()->where('role.role_name', $roleName)->exists();
     }
 
     /**
@@ -153,11 +153,44 @@ class User extends Model
      */
     public function hasPermission(string $permissionName): bool
     {
-        return $this->userRoles()
-                   ->whereHas('role.permissions', function ($query) use ($permissionName) {
-                       $query->where('permission_name', $permissionName);
-                   })
-                   ->exists();
+        // Get all active user roles ordered by role priority (highest priority first)
+        $activeUserRoles = $this->userRoles()
+            ->join('role', 'user_role.role_id', '=', 'role.role_id')
+            ->where('user_role.start_date', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('user_role.end_date')
+                      ->orWhere('user_role.end_date', '>=', now());
+            })
+            ->with(['role', 'customPermissions.permission'])
+            ->orderBy('role.role_priority', 'asc')
+            ->get();
+
+        foreach ($activeUserRoles as $userRole) {
+            // Check if this role has the permission
+            if ($userRole->role->hasPermission($permissionName)) {
+                // Check for custom override
+                $customPermission = $userRole->customPermissions
+                    ->where('permission.permission_name', $permissionName)
+                    ->first();
+
+                if ($customPermission) {
+                    return $customPermission->is_granted;
+                }
+
+                return true;
+            }
+
+            // Check if there's a custom permission override even if role doesn't have it
+            $customPermission = $userRole->customPermissions
+                ->where('permission.permission_name', $permissionName)
+                ->first();
+
+            if ($customPermission) {
+                return $customPermission->is_granted;
+            }
+        }
+
+        return false;
     }
 
     /**

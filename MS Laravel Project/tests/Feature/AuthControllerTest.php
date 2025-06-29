@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthControllerTest extends TestCase
 {
-    use WithFaker;
+    use RefreshDatabase, WithFaker;
 
     protected function setUp(): void
     {
@@ -26,45 +26,45 @@ class AuthControllerTest extends TestCase
 
     private function createTestData()
     {
-        // Create or get academic year
-        $academicYear = AcademicYear::firstOrCreate([
+        // Create academic year
+        $academicYear = AcademicYear::create([
+            'academic_year_id' => 1,
             'start_date' => '2024-06-01',
-            'end_date' => '2025-05-31'
-        ], [
+            'end_date' => '2025-05-31',
             'description' => 'Academic Year 2024-2025'
         ]);
 
-        // Create or get role
-        $role = Role::firstOrCreate([
-            'role_name' => 'Student'
-        ], [
+        // Create role
+        $role = Role::create([
+            'role_id' => 1,
+            'role_name' => 'Student',
             'description' => 'Regular student role',
             'role_priority' => 99
         ]);
 
-        // Create or get user
-        $user = User::firstOrCreate([
-            'email' => 'janella.boncodin@example.com'
-        ], [
+        // Create user
+        $user = User::create([
+            'user_id' => 1,
             'first_name' => 'Janella',
             'last_name' => 'Boncodin',
             'middle_initial' => 'A',
-            'password' => Hash::make('JanellaanneBoncodin')
+            'email' => 'janella.boncodin@example.com',
+            'password' => Hash::make('JanellaAnneBoncodin')
         ]);
 
-        // Create or get student
-        $student = Student::firstOrCreate([
+        // Create student
+        $student = Student::create([
+            'student_id' => 1,
+            'user_id' => $user->user_id,
             'student_number' => '2021-00112-TG-0'
-        ], [
-            'user_id' => $user->user_id
         ]);
 
-        // Assign role to user if not already assigned
-        UserRole::firstOrCreate([
+        // Assign role to user
+        UserRole::create([
+            'user_role_id' => 1,
             'user_id' => $user->user_id,
             'role_id' => $role->role_id,
-            'academic_year_id' => $academicYear->academic_year_id
-        ], [
+            'academic_year_id' => $academicYear->academic_year_id,
             'start_date' => now(),
             'end_date' => null
         ]);
@@ -98,9 +98,9 @@ class AuthControllerTest extends TestCase
                     ]
                 ])
                 ->assertJsonFragment([
-                    'first_name' => 'Janella Anne',
+                    'first_name' => 'Janella',
                     'last_name' => 'Boncodin',
-                    'email' => 'bjanellaanne@gmail.com',
+                    'email' => 'janella.boncodin@example.com',
                     'student_number' => '2021-00112-TG-0'
                 ]);
     }
@@ -224,13 +224,13 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_with_user_no_password()
     {
-        // Create a user without password
+        // Create a user with an empty password string instead of null
         $user = User::firstOrCreate([
             'email' => 'no.password@example.com'
         ], [
             'first_name' => 'No',
             'last_name' => 'Password',
-            'password' => null
+            'password' => '' // Use empty string instead of null
         ]);
 
         // Create student record for this user
@@ -342,9 +342,9 @@ class AuthControllerTest extends TestCase
                     ]
                 ])
                 ->assertJsonFragment([
-                    'first_name' => 'Janella Anne',
+                    'first_name' => 'Janella',
                     'last_name' => 'Boncodin',
-                    'email' => 'bjanellaanne@gmail.com',
+                    'email' => 'janella.boncodin@example.com',
                     'student_number' => '2021-00112-TG-0'
                 ]);
     }
