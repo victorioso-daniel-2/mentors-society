@@ -101,6 +101,9 @@ class AuthController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Login failed',
@@ -118,8 +121,17 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not authenticated'
+                ], 401);
+            }
+
             // Revoke the token
-            $request->user()->currentAccessToken()->delete();
+            $user->currentAccessToken()->delete();
 
             return response()->json([
                 'success' => true,
@@ -145,6 +157,14 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not authenticated'
+                ], 401);
+            }
+
             $student = $user->student;
 
             return response()->json([
@@ -180,8 +200,15 @@ class AuthController extends Controller
         try {
             $user = $request->user();
             
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not authenticated'
+                ], 401);
+            }
+            
             // Revoke current token
-            $request->user()->currentAccessToken()->delete();
+            $user->currentAccessToken()->delete();
             
             // Generate new token
             $token = $user->createToken('auth-token')->plainTextToken;

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Hash;
 
 class CsvStudentImportSeeder extends Seeder
 {
@@ -88,11 +89,15 @@ class CsvStudentImportSeeder extends Seeder
                             $this->command->warn("Skipping duplicate entry for email: {$email} or student number: {$studentNumber} in file {$fileName}");
                             return;
                         }
+                        $firstName = str_replace(' ', '', ucwords(strtolower($parsedName['first_name'])));
+                        $lastName = ucfirst(strtolower($parsedName['last_name']));
+                        $password = Hash::make($firstName . $lastName);
                         $userId = DB::table('user')->insertGetId([
                             'first_name' => $parsedName['first_name'],
                             'middle_initial' => $parsedName['middle_initial'],
                             'last_name' => $parsedName['last_name'],
                             'email' => $email,
+                            'password' => $password,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);

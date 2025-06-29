@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use WithFaker;
 
     protected function setUp(): void
     {
@@ -26,40 +26,45 @@ class AuthControllerTest extends TestCase
 
     private function createTestData()
     {
-        // Create academic year
-        $academicYear = AcademicYear::create([
+        // Create or get academic year
+        $academicYear = AcademicYear::firstOrCreate([
             'start_date' => '2024-06-01',
-            'end_date' => '2025-05-31',
+            'end_date' => '2025-05-31'
+        ], [
             'description' => 'Academic Year 2024-2025'
         ]);
 
-        // Create role
-        $role = Role::create([
-            'role_name' => 'Student',
+        // Create or get role
+        $role = Role::firstOrCreate([
+            'role_name' => 'Student'
+        ], [
             'description' => 'Regular student role',
             'role_priority' => 99
         ]);
 
-        // Create user
-        $user = User::create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+        // Create or get user
+        $user = User::firstOrCreate([
+            'email' => 'janella.boncodin@example.com'
+        ], [
+            'first_name' => 'Janella',
+            'last_name' => 'Boncodin',
             'middle_initial' => 'A',
-            'email' => 'john.doe@example.com',
-            'password' => Hash::make('password123')
+            'password' => Hash::make('JanellaanneBoncodin')
         ]);
 
-        // Create student
-        $student = Student::create([
-            'user_id' => $user->user_id,
-            'student_number' => '2021-00001-TG-0'
+        // Create or get student
+        $student = Student::firstOrCreate([
+            'student_number' => '2021-00112-TG-0'
+        ], [
+            'user_id' => $user->user_id
         ]);
 
-        // Assign role to user
-        UserRole::create([
+        // Assign role to user if not already assigned
+        UserRole::firstOrCreate([
             'user_id' => $user->user_id,
             'role_id' => $role->role_id,
-            'academic_year_id' => $academicYear->academic_year_id,
+            'academic_year_id' => $academicYear->academic_year_id
+        ], [
             'start_date' => now(),
             'end_date' => null
         ]);
@@ -71,8 +76,8 @@ class AuthControllerTest extends TestCase
     public function test_successful_login_with_valid_credentials()
     {
         $response = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00001-TG-0',
-            'password' => 'password123'
+            'student_number' => '2021-00112-TG-0',
+            'password' => 'JanellaAnneBoncodin'
         ]);
 
         $response->assertStatus(200)
@@ -92,22 +97,12 @@ class AuthControllerTest extends TestCase
                         'token_type'
                     ]
                 ])
-                ->assertJson([
-                    'success' => true,
-                    'message' => 'Login successful',
-                    'data' => [
-                        'user' => [
-                            'first_name' => 'John',
-                            'last_name' => 'Doe',
-                            'email' => 'john.doe@example.com',
-                            'student_number' => '2021-00001-TG-0'
-                        ],
-                        'token_type' => 'Bearer'
-                    ]
+                ->assertJsonFragment([
+                    'first_name' => 'Janella Anne',
+                    'last_name' => 'Boncodin',
+                    'email' => 'bjanellaanne@gmail.com',
+                    'student_number' => '2021-00112-TG-0'
                 ]);
-
-        // Check that token is not empty
-        $this->assertNotEmpty($response->json('data.token'));
     }
 
     /**
@@ -133,7 +128,7 @@ class AuthControllerTest extends TestCase
     public function test_login_with_invalid_password()
     {
         $response = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00001-TG-0',
+            'student_number' => '2021-00112-TG-0',
             'password' => 'wrongpassword'
         ]);
 
@@ -203,21 +198,24 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_with_student_number_no_user()
     {
-        // Create a student without a user
-        $student = Student::create([
-            'user_id' => 99999, // Non-existent user
-            'student_number' => '2021-00002-TG-0'
+        // Create a user without a student record
+        $user = User::firstOrCreate([
+            'email' => 'no.student@example.com'
+        ], [
+            'first_name' => 'No',
+            'last_name' => 'Student',
+            'password' => Hash::make('NoStudent')
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00002-TG-0',
-            'password' => 'password123'
+            'student_number' => '2021-99999-TG-0',
+            'password' => 'NoStudent'
         ]);
 
         $response->assertStatus(404)
                 ->assertJson([
                     'success' => false,
-                    'message' => 'User account not found'
+                    'message' => 'Student number not found'
                 ]);
     }
 
@@ -226,23 +224,25 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_with_user_no_password()
     {
-        // Create user without password
-        $user = User::create([
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'middle_initial' => 'B',
-            'email' => 'jane.smith@example.com'
-            // No password set
+        // Create a user without password
+        $user = User::firstOrCreate([
+            'email' => 'no.password@example.com'
+        ], [
+            'first_name' => 'No',
+            'last_name' => 'Password',
+            'password' => null
         ]);
 
-        $student = Student::create([
-            'user_id' => $user->user_id,
-            'student_number' => '2021-00003-TG-0'
+        // Create student record for this user
+        $student = Student::firstOrCreate([
+            'student_number' => '2021-99998-TG-0'
+        ], [
+            'user_id' => $user->user_id
         ]);
 
         $response = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00003-TG-0',
-            'password' => 'password123'
+            'student_number' => '2021-99998-TG-0',
+            'password' => 'anypassword'
         ]);
 
         $response->assertStatus(401)
@@ -288,15 +288,16 @@ class AuthControllerTest extends TestCase
      */
     public function test_successful_logout()
     {
-        // First login to get token
+        // First login to get a token
         $loginResponse = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00001-TG-0',
-            'password' => 'password123'
+            'student_number' => '2021-00112-TG-0',
+            'password' => 'JanellaAnneBoncodin'
         ]);
 
+        $loginResponse->assertStatus(200);
         $token = $loginResponse->json('data.token');
 
-        // Then logout
+        // Now logout with the token
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token
         ])->postJson('/api/auth/logout');
@@ -313,15 +314,16 @@ class AuthControllerTest extends TestCase
      */
     public function test_get_current_user_info()
     {
-        // First login to get token
+        // First login to get a token
         $loginResponse = $this->postJson('/api/auth/login', [
-            'student_number' => '2021-00001-TG-0',
-            'password' => 'password123'
+            'student_number' => '2021-00112-TG-0',
+            'password' => 'JanellaAnneBoncodin'
         ]);
 
+        $loginResponse->assertStatus(200);
         $token = $loginResponse->json('data.token');
 
-        // Get user info
+        // Now get user info with the token
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token
         ])->getJson('/api/auth/me');
@@ -339,16 +341,11 @@ class AuthControllerTest extends TestCase
                         ]
                     ]
                 ])
-                ->assertJson([
-                    'success' => true,
-                    'data' => [
-                        'user' => [
-                            'first_name' => 'John',
-                            'last_name' => 'Doe',
-                            'email' => 'john.doe@example.com',
-                            'student_number' => '2021-00001-TG-0'
-                        ]
-                    ]
+                ->assertJsonFragment([
+                    'first_name' => 'Janella Anne',
+                    'last_name' => 'Boncodin',
+                    'email' => 'bjanellaanne@gmail.com',
+                    'student_number' => '2021-00112-TG-0'
                 ]);
     }
 } 

@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,19 +24,25 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Authentication Routes
 // =============================================
 Route::prefix('auth')->group(function () {
-    Route::post('/login', 'AuthController@login');           // Login with student number and password
-    Route::post('/logout', 'AuthController@logout');         // Logout
-    Route::post('/refresh', 'AuthController@refresh');       // Refresh token
-    Route::get('/me', 'AuthController@me');                  // Get current user info
-    Route::post('/change-password', 'AuthController@changePassword'); // Change password
-    Route::post('/forgot-password', 'AuthController@forgotPassword'); // Forgot password
-    Route::post('/reset-password', 'AuthController@resetPassword');   // Reset password
+    Route::post('/login', [AuthController::class, 'login']);           // Login with student number and password
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // Forgot password
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);   // Reset password
 });
 
 // =============================================
 // Protected Routes (require authentication)
 // =============================================
 Route::middleware('auth:sanctum')->group(function () {
+    
+    // =============================================
+    // Protected Authentication Routes
+    // =============================================
+    Route::prefix('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);         // Logout
+        Route::post('/refresh', [AuthController::class, 'refresh']);       // Refresh token
+        Route::get('/me', [AuthController::class, 'me']);                  // Get current user info
+        Route::post('/change-password', [AuthController::class, 'changePassword']); // Change password
+    });
     
     // Get authenticated user info
     Route::get('/user', function (Request $request) {

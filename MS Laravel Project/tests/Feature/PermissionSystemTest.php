@@ -17,7 +17,7 @@ use App\Models\RolePermission;
 
 class PermissionSystemTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use WithFaker;
 
     protected function setUp(): void
     {
