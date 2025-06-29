@@ -127,7 +127,10 @@ class PermissionSeeder extends Seeder
 
         // Create all permissions
         foreach ($permissions as $permission) {
-            Permission::create($permission);
+            Permission::firstOrCreate(
+                ['permission_name' => $permission['permission_name']],
+                $permission
+            );
         }
 
         // =============================================
@@ -152,7 +155,10 @@ class PermissionSeeder extends Seeder
 
         // Create all roles
         foreach ($roles as $role) {
-            Role::create($role);
+            Role::firstOrCreate(
+                ['role_name' => $role['role_name']],
+                $role
+            );
         }
 
         // =============================================
@@ -173,7 +179,7 @@ class PermissionSeeder extends Seeder
         $presidentRole = Role::where('role_name', 'President')->first();
         $allPermissions = Permission::all();
         foreach ($allPermissions as $permission) {
-            RolePermission::create([
+            RolePermission::firstOrCreate([
                 'role_id' => $presidentRole->role_id,
                 'permission_id' => $permission->permission_id
             ]);
@@ -374,7 +380,7 @@ class PermissionSeeder extends Seeder
         $permissions = Permission::whereIn('permission_name', $permissionNames)->get();
         
         foreach ($permissions as $permission) {
-            RolePermission::create([
+            RolePermission::firstOrCreate([
                 'role_id' => $role->role_id,
                 'permission_id' => $permission->permission_id
             ]);
