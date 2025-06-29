@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcademicYear extends Model
 {
-    protected $table = 'ACADEMIC_YEAR';
+    protected $table = 'academic_year';
     protected $primaryKey = 'academic_year_id';
     public $timestamps = false;
 
@@ -27,7 +27,7 @@ class AcademicYear extends Model
      */
     public function classes(): HasMany
     {
-        return $this->hasMany(\App\Models\Class::class, 'academic_year_id');
+        return $this->hasMany(\App\Models\ClassModel::class, 'academic_year_id');
     }
 
     /**

@@ -75,7 +75,7 @@ class AuthController extends Controller
             $token = $user->createToken('auth-token')->plainTextToken;
 
             // Get user roles
-            $roles = $user->roles()->with('role')->get();
+            $roles = $user->roles()->get();
 
             return response()->json([
                 'success' => true,
@@ -88,11 +88,13 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'student_number' => $student->student_number,
                     ],
-                    'roles' => $roles->map(function ($userRole) {
+                    'roles' => $roles->map(function ($role) {
                         return [
-                            'role_id' => $userRole->role->role_id,
-                            'role_name' => $userRole->role->role_name,
-                            'academic_year_id' => $userRole->academic_year_id,
+                            'role_id' => $role->role_id,
+                            'role_name' => $role->role_name,
+                            'academic_year_id' => $role->pivot->academic_year_id ?? null,
+                            'start_date' => $role->pivot->start_date ?? null,
+                            'end_date' => $role->pivot->end_date ?? null,
                         ];
                     }),
                     'token' => $token,

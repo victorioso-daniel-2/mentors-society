@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StudentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,41 +55,47 @@ Route::middleware('auth:sanctum')->group(function () {
     // =============================================
     // Academic Year Management
     // =============================================
-    Route::prefix('academic-years')->group(function () {
-        Route::get('/', 'AcademicYearController@index');
-        Route::get('/{id}', 'AcademicYearController@show');
-        Route::post('/', 'AcademicYearController@store');
-        Route::put('/{id}', 'AcademicYearController@update');
-        Route::delete('/{id}', 'AcademicYearController@destroy');
-        Route::get('/current/active', 'AcademicYearController@getCurrentActive');
-    });
+    // Route::prefix('academic-years')->group(function () {
+    //     Route::get('/', 'AcademicYearController@index');
+    //     Route::get('/{id}', 'AcademicYearController@show');
+    //     Route::post('/', 'AcademicYearController@store');
+    //     Route::put('/{id}', 'AcademicYearController@update');
+    //     Route::delete('/{id}', 'AcademicYearController@destroy');
+    //     Route::get('/current/active', 'AcademicYearController@getCurrentActive');
+    // });
 
     // =============================================
     // User Management
     // =============================================
     Route::prefix('users')->group(function () {
-        Route::get('/', 'UserController@index');
-        Route::get('/{id}', 'UserController@show');
-        Route::post('/', 'UserController@store');
-        Route::put('/{id}', 'UserController@update');
-        Route::delete('/{id}', 'UserController@destroy');
-        Route::get('/{id}/roles', 'UserController@getUserRoles');
-        Route::post('/{id}/roles', 'UserController@assignRole');
-        Route::delete('/{id}/roles/{roleId}', 'UserController@removeRole');
+        Route::get('/', [UserController::class, 'index']);
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::put('/{id}', [UserController::class, 'update']);
+        Route::delete('/{id}', [UserController::class, 'destroy']);
+        Route::get('/{id}/roles', [UserController::class, 'getUserRoles']);
+        Route::post('/{id}/roles', [UserController::class, 'assignRole']);
+        Route::delete('/{id}/roles/{roleId}', [UserController::class, 'removeRole']);
+        Route::get('/role/{roleName}', [UserController::class, 'getUsersByRole']);
     });
+
+    // =============================================
+    // User Search (separate route for search functionality)
+    // =============================================
+    Route::get('/users-search', [UserController::class, 'search']);
 
     // =============================================
     // Role and Permission Management
     // =============================================
     Route::prefix('roles')->group(function () {
-        Route::get('/', 'RoleController@index');
-        Route::get('/{id}', 'RoleController@show');
-        Route::post('/', 'RoleController@store');
-        Route::put('/{id}', 'RoleController@update');
-        Route::delete('/{id}', 'RoleController@destroy');
-        Route::get('/{id}/permissions', 'RoleController@getRolePermissions');
-        Route::post('/{id}/permissions', 'RoleController@assignPermission');
-        Route::delete('/{id}/permissions/{permissionId}', 'RoleController@removePermission');
+        Route::get('/', [RoleController::class, 'index']);
+        Route::get('/{id}', [RoleController::class, 'show']);
+        Route::post('/', [RoleController::class, 'store']);
+        Route::put('/{id}', [RoleController::class, 'update']);
+        Route::delete('/{id}', [RoleController::class, 'destroy']);
+        Route::get('/{id}/permissions', [RoleController::class, 'getPermissions']);
+        Route::post('/{id}/permissions', [RoleController::class, 'assignPermissions']);
+        Route::get('/permissions/all', [RoleController::class, 'getAllPermissions']);
     });
 
     Route::prefix('permissions')->group(function () {
@@ -101,16 +110,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Student Management
     // =============================================
     Route::prefix('students')->group(function () {
-        Route::get('/', 'StudentController@index');
-        Route::get('/{id}', 'StudentController@show');
-        Route::post('/', 'StudentController@store');
-        Route::put('/{id}', 'StudentController@update');
-        Route::delete('/{id}', 'StudentController@destroy');
-        Route::get('/{id}/classes', 'StudentController@getStudentClasses');
-        Route::post('/{id}/classes', 'StudentController@assignClass');
-        Route::delete('/{id}/classes/{classId}', 'StudentController@removeClass');
-        Route::get('/by-class/{classId}', 'StudentController@getStudentsByClass');
-        Route::get('/by-year-level/{yearLevel}', 'StudentController@getStudentsByYearLevel');
+        Route::get('/', [StudentController::class, 'index']);
+        Route::get('/{id}', [StudentController::class, 'show']);
+        Route::post('/', [StudentController::class, 'store']);
+        Route::put('/{id}', [StudentController::class, 'update']);
+        Route::delete('/{id}', [StudentController::class, 'destroy']);
+        Route::get('/{id}/classes', [StudentController::class, 'getClasses']);
+        Route::post('/{id}/classes', [StudentController::class, 'assignClass']);
+        Route::delete('/{id}/classes', [StudentController::class, 'removeClass']);
+        Route::get('/classes/available', [StudentController::class, 'getAvailableClasses']);
     });
 
     Route::prefix('classes')->group(function () {
@@ -305,4 +313,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/student/stats', 'DashboardController@getStudentStats');
         Route::get('/recent-activities', 'DashboardController@getRecentActivities');
     });
+
+    Route::get('/sanctum-test', function () {
+        return response()->json(['message' => 'Authenticated'], 200);
+    });
+});
+
+Route::middleware('api')->group(function () {
+    // =============================================
+    // Authentication
+    // =============================================
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+    // =============================================
+    // Simple test route for authentication
+    // =============================================
+    Route::get('/test-auth', function () {
+        return response()->json(['message' => 'Authenticated'], 200);
+    })->middleware('auth:sanctum');
+
+    // =============================================
+    // Dashboard
+    // =============================================
 });
