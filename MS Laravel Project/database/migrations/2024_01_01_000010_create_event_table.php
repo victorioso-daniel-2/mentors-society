@@ -17,10 +17,10 @@ return new class extends Migration
             $table->time('end_time');
             $table->string('venue', 100);
             $table->unsignedBigInteger('status_id')->nullable();
-            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('created_by', 20)->nullable();
             $table->integer('capacity')->nullable();
             $table->foreign('status_id')->references('status_id')->on('event_status')->onDelete('restrict');
-            $table->foreign('created_by')->references('user_id')->on('user')->onDelete('set null');
+            $table->foreign('created_by')->references('student_number')->on('user')->onDelete('set null');
         });
     }
 

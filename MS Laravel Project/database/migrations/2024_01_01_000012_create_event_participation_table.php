@@ -11,12 +11,12 @@ return new class extends Migration
         Schema::create('event_participation', function (Blueprint $table) {
             $table->id('participation_id');
             $table->unsignedBigInteger('event_id');
-            $table->unsignedBigInteger('student_id');
+            $table->string('student_number', 20);
             $table->boolean('attended');
             $table->text('feedback')->nullable();
             $table->timestamp('feedback_date')->nullable();
             $table->foreign('event_id')->references('event_id')->on('event')->onDelete('cascade');
-            $table->foreign('student_id')->references('student_id')->on('student')->onDelete('cascade');
+            $table->foreign('student_number')->references('student_number')->on('student')->onDelete('cascade');
         });
     }
 

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('academic_year', function (Blueprint $table) {
             $table->id('academic_year_id');
             $table->date('start_date');
-            $table->date('end_date');
-            $table->string('description', 100)->nullable();
+            $table->date('end_date')->nullable(); // End date is set when academic year is changed
+            $table->string('description', 20)->nullable(); // e.g., '2024-2025'
             $table->unique(['start_date', 'end_date']);
         });
     }
