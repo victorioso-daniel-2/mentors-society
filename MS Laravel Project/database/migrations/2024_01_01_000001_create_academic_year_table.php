@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('academic_year_id');
             $table->date('start_date');
             $table->date('end_date')->nullable(); // End date is set when academic year is changed
-            $table->string('description', 20)->nullable(); // e.g., '2024-2025'
+            $table->string('description', 32); // Format: 'YYYY-YYYY' or longer descriptions
             $table->unique(['start_date', 'end_date']);
         });
     }

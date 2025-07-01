@@ -46,7 +46,7 @@ class AuthController extends Controller
             }
 
             // Get the associated user
-            $user = $student->user;
+            $user = User::where('student_number', $student->student_number)->first();
 
             if (!$user) {
                 return response()->json([
@@ -82,11 +82,11 @@ class AuthController extends Controller
                 'message' => 'Login successful',
                 'data' => [
                     'user' => [
-                        'id' => $user->user_id,
-                        'first_name' => $user->first_name,
-                        'last_name' => $user->last_name,
-                        'email' => $user->email,
                         'student_number' => $student->student_number,
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'middle_initial' => $student->middle_initial,
+                        'email' => $student->email,
                     ],
                     'roles' => $roles->map(function ($role) {
                         return [
@@ -159,29 +159,25 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            
             if (!$user) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Not authenticated'
                 ], 401);
             }
-
-            $student = $user->student;
-
+            $student = Student::where('student_number', $user->student_number)->first();
             return response()->json([
                 'success' => true,
                 'data' => [
                     'user' => [
-                        'id' => $user->user_id,
-                        'first_name' => $user->first_name,
-                        'last_name' => $user->last_name,
-                        'email' => $user->email,
                         'student_number' => $student ? $student->student_number : null,
+                        'first_name' => $student ? $student->first_name : null,
+                        'last_name' => $student ? $student->last_name : null,
+                        'middle_initial' => $student ? $student->middle_initial : null,
+                        'email' => $student ? $student->email : null,
                     ]
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -304,7 +300,8 @@ class AuthController extends Controller
         }
 
         try {
-            $user = User::where('email', $request->email)->first();
+            $student = Student::where('email', $request->email)->first();
+            $user = $student ? User::where('student_number', $student->student_number)->first() : null;
 
             if (!$user) {
                 return response()->json([
@@ -352,7 +349,8 @@ class AuthController extends Controller
         }
 
         try {
-            $user = User::where('email', $request->email)->first();
+            $student = Student::where('email', $request->email)->first();
+            $user = $student ? User::where('student_number', $student->student_number)->first() : null;
 
             if (!$user) {
                 return response()->json([

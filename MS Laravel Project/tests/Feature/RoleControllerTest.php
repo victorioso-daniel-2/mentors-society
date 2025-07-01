@@ -50,7 +50,7 @@ class RoleControllerTest extends TestCase
 
         // Assign president role to user using UserRole directly
         UserRole::create([
-            'user_id' => $this->user->user_id,
+            'student_number' => $this->user->student_number,
             'role_id' => $presidentRole->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()
@@ -253,7 +253,7 @@ class RoleControllerTest extends TestCase
 
         // Assign role to user using UserRole directly
         UserRole::create([
-            'user_id' => $testUser->user_id,
+            'student_number' => $testUser->student_number,
             'role_id' => $role->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()

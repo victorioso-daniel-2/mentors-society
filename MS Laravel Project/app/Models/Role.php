@@ -39,7 +39,7 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'USER_ROLE', 'role_id', 'user_id')
+        return $this->belongsToMany(User::class, 'USER_ROLE', 'role_id', 'student_number')
                     ->withPivot('academic_year_id', 'start_date', 'end_date');
     }
 

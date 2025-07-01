@@ -21,10 +21,15 @@ class CsvStudentImportSeeder extends Seeder
 
         $dataDirectory = database_path('seeders/data');
         
-        // Ensure academic year 2024-2025 exists using Eloquent model
+        // Auto-generate description as 'YYYY-YYYY' from start_date
+        $startDate = '2024-06-01';
+        $startYear = date('Y', strtotime($startDate));
+        $nextYear = $startYear + 1;
+        $description = "{$startYear}-{$nextYear}";
         $academicYear = AcademicYear::firstOrCreate([
-            'description' => '2024-2025',
-            'start_date' => '2024-06-01',
+            'start_date' => $startDate,
+            'description' => $description,
+        ], [
             'end_date' => null
         ]);
         $academicYearId = $academicYear->academic_year_id;

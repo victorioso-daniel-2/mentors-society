@@ -13,7 +13,7 @@ class UserRole extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'user_id',
+        'student_number',
         'role_id',
         'academic_year_id',
         'start_date',
@@ -30,7 +30,7 @@ class UserRole extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'student_number', 'student_number');
     }
 
     /**

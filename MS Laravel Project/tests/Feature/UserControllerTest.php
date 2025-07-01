@@ -45,7 +45,7 @@ class UserControllerTest extends TestCase
 
         // Create user
         $this->user = User::create([
-            'user_id' => 1,
+            'student_number' => 1,
             'first_name' => 'Janella',
             'last_name' => 'Boncodin',
             'middle_initial' => 'A',
@@ -56,14 +56,13 @@ class UserControllerTest extends TestCase
         // Create student record
         $this->student = Student::create([
             'student_id' => 1,
-            'user_id' => $this->user->user_id,
             'student_number' => '2021-00112-TG-0'
         ]);
 
         // Create user role
         $this->userRole = UserRole::create([
             'user_role_id' => 1,
-            'user_id' => $this->user->user_id,
+            'student_number' => $this->user->student_number,
             'role_id' => $this->role->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now(),
@@ -172,7 +171,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users/' . $this->user->user_id);
+        ])->getJson('/api/users/' . $this->user->student_number);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -191,7 +190,7 @@ class UserControllerTest extends TestCase
                 ->assertJson([
                     'success' => true,
                     'data' => [
-                        'id' => $this->user->user_id,
+                        'id' => $this->user->student_number,
                         'first_name' => 'Janella',
                         'last_name' => 'Boncodin',
                         'email' => 'janella.boncodin@example.com'
@@ -223,7 +222,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, $updateData);
+        ])->putJson('/api/users/' . $this->user->student_number, $updateData);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -259,7 +258,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, $updateData);
+        ])->putJson('/api/users/' . $this->user->student_number, $updateData);
 
         $response->assertStatus(200)
                 ->assertJson(['success' => true]);
@@ -271,7 +270,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, [
+        ])->putJson('/api/users/' . $this->user->student_number, [
             'email' => 'invalid-email'
         ]);
 
@@ -286,7 +285,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users/' . $this->user->user_id . '/roles');
+        ])->getJson('/api/users/' . $this->user->student_number . '/roles');
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -329,7 +328,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', $roleData);
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', $roleData);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -359,7 +358,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', [
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', [
             'role_id' => 99999, // Non-existent role
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()->format('Y-m-d')
@@ -382,7 +381,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', $roleData);
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', $roleData);
 
         $response->assertStatus(400)
                 ->assertJson(['success' => false])
@@ -393,14 +392,14 @@ class UserControllerTest extends TestCase
     public function it_can_remove_role_from_user()
     {
         // First, get the user role ID
-        $userRole = UserRole::where('user_id', $this->user->user_id)
+        $userRole = UserRole::where('student_number', $this->user->student_number)
                            ->where('role_id', $this->role->role_id)
                            ->first();
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->deleteJson('/api/users/' . $this->user->user_id . '/roles/' . $userRole->user_role_id);
+        ])->deleteJson('/api/users/' . $this->user->student_number . '/roles/' . $userRole->user_role_id);
 
         $response->assertStatus(200)
                 ->assertJson(['success' => true]);
@@ -412,7 +411,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->deleteJson('/api/users/' . $this->user->user_id . '/roles/99999');
+        ])->deleteJson('/api/users/' . $this->user->student_number . '/roles/99999');
 
         $response->assertStatus(404)
                 ->assertJson(['success' => false]);

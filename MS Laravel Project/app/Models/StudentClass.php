@@ -8,19 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StudentClass extends Model
 {
     protected $table = 'student_class';
-    protected $primaryKey = ['student_id', 'class_id', 'academic_year_id'];
+    protected $primaryKey = ['student_number', 'class_id', 'academic_year_id'];
     public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [
-        'student_id',
+        'student_number',
         'class_id',
         'academic_year_id',
         'year_level'
     ];
 
     protected $casts = [
-        'student_id' => 'integer',
         'class_id' => 'integer',
         'academic_year_id' => 'integer',
     ];
@@ -30,7 +29,7 @@ class StudentClass extends Model
      */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class, 'student_id', 'student_id');
+        return $this->belongsTo(Student::class, 'student_number', 'student_number');
     }
 
     /**

@@ -23,13 +23,14 @@ class StudentController extends Controller
             $query = Student::with(['user', 'classes']);
 
             // Search filter
-            if ($request->has('search') && $request->search) {
+            if ($request->filled('search')) {
                 $search = $request->search;
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('student_number', 'like', "%{$search}%")
+                      ->orWhere('first_name', 'like', "%{$search}%")
                       ->orWhere('last_name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('student_number', 'like', "%{$search}%");
+                });
             }
 
             // Class filter
@@ -73,9 +74,10 @@ class StudentController extends Controller
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
                 'middle_initial' => 'nullable|string|max:5',
-                'email' => 'required|email|unique:user,email',
+                'email' => 'required|email|unique:student,email',
                 'password' => 'required|string|min:6',
                 'student_number' => 'required|string|max:20|unique:student,student_number',
+                'academic_status' => 'required|in:active,dropped,shifted,graduated',
                 'classes' => 'nullable|array',
                 'classes.*.class_id' => 'required|exists:class,class_id',
                 'classes.*.academic_year_id' => 'required|exists:academic_year,academic_year_id',
@@ -90,26 +92,28 @@ class StudentController extends Controller
                 ], 422);
             }
 
-            // Create user first
+            // Create student first
+            $student = Student::create([
+                'student_number' => $request->student_number,
+                'email' => $request->email,
+                'academic_status' => $request->academic_status
+            ]);
+
+            // Create user
             $user = User::create([
+                'student_number' => $request->student_number,
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'middle_initial' => $request->middle_initial,
-                'email' => $request->email,
-                'password' => Hash::make($request->password)
-            ]);
-
-            // Create student
-            $student = Student::create([
-                'user_id' => $user->user_id,
-                'student_number' => $request->student_number
+                'password' => Hash::make($request->password),
+                'status' => 'active'
             ]);
 
             // Assign classes if provided
             if ($request->has('classes') && is_array($request->classes)) {
                 foreach ($request->classes as $classData) {
                     StudentClass::create([
-                        'student_id' => $student->student_id,
+                        'student_number' => $student->student_number,
                         'class_id' => $classData['class_id'],
                         'academic_year_id' => $classData['academic_year_id'],
                         'year_level' => $classData['year_level']
@@ -165,17 +169,19 @@ class StudentController extends Controller
     /**
      * Update the specified student
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, $student_number): JsonResponse
     {
         try {
-            $student = Student::with('user')->findOrFail($id);
+            $student = Student::where('student_number', $student_number)->firstOrFail();
+            $user = User::where('student_number', $student_number)->firstOrFail();
 
             $validator = Validator::make($request->all(), [
                 'first_name' => 'sometimes|required|string|max:50',
                 'last_name' => 'sometimes|required|string|max:50',
                 'middle_initial' => 'nullable|string|max:5',
-                'email' => 'sometimes|required|email|unique:user,email,' . $student->user_id . ',user_id',
-                'student_number' => 'sometimes|required|string|max:20|unique:student,student_number,' . $id . ',student_id'
+                'email' => 'sometimes|required|email|unique:student,email,' . $student_number . ',student_number',
+                'academic_status' => 'sometimes|required|in:active,dropped,shifted,graduated',
+                'password' => 'sometimes|nullable|string|min:6'
             ]);
 
             if ($validator->fails()) {
@@ -186,16 +192,16 @@ class StudentController extends Controller
                 ], 422);
             }
 
-            // Update user information
-            if ($request->has('first_name') || $request->has('last_name') || $request->has('middle_initial') || $request->has('email')) {
-                $userData = $request->only(['first_name', 'last_name', 'middle_initial', 'email']);
-                $student->user->update($userData);
-            }
-
             // Update student information
-            if ($request->has('student_number')) {
-                $student->update(['student_number' => $request->student_number]);
+            $studentData = $request->only(['email', 'academic_status']);
+            $student->update($studentData);
+
+            // Update user information
+            $userData = $request->only(['first_name', 'last_name', 'middle_initial']);
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
             }
+            $user->update($userData);
 
             $student->load(['user', 'classes.class', 'classes.academicYear']);
 
@@ -230,14 +236,14 @@ class StudentController extends Controller
             // Delete student class assignments first
             $student->classes()->delete();
 
-            // Get the user ID before deleting the student
-            $userId = $student->user_id;
+            // Get the student number before deleting the student
+            $studentNumber = $student->student_number;
 
             // Delete student
             $student->delete();
 
             // Delete the associated user
-            User::where('user_id', $userId)->delete();
+            User::where('student_number', $studentNumber)->delete();
 
             return response()->json([
                 'success' => true,
@@ -310,7 +316,7 @@ class StudentController extends Controller
 
             // Check if student is already assigned to this class in this academic year
             $existingAssignment = StudentClass::where([
-                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
                 'class_id' => $request->class_id,
                 'academic_year_id' => $request->academic_year_id
             ])->exists();
@@ -323,7 +329,7 @@ class StudentController extends Controller
             }
 
             $studentClass = StudentClass::create([
-                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
                 'class_id' => $request->class_id,
                 'academic_year_id' => $request->academic_year_id,
                 'year_level' => $request->year_level
@@ -373,7 +379,7 @@ class StudentController extends Controller
             }
 
             $deleted = StudentClass::where([
-                'student_id' => $student->student_id,
+                'student_number' => $student->student_number,
                 'class_id' => $request->class_id,
                 'academic_year_id' => $request->academic_year_id
             ])->delete();

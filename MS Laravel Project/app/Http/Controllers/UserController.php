@@ -27,7 +27,9 @@ class UserController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhereHas('student', function ($sq) use ($search) {
+                      $sq->where('email', 'like', "%{$search}%");
+                  })
                   ->orWhereHas('student', function ($sq) use ($search) {
                       $sq->where('student_number', 'like', "%{$search}%");
                   });
@@ -68,16 +70,14 @@ class UserController extends Controller
         // Pagination
         $perPage = $request->get('per_page', 15);
         $users = $query->paginate($perPage);
-
-        $users->getCollection()->transform(function ($user) {
+        $users->setCollection($users->getCollection()->map(function ($user) {
             return [
-                'id' => $user->user_id,
+                'student_number' => $user->student_number,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'middle_initial' => $user->middle_initial,
-                'email' => $user->email,
+                'email' => $user->student ? $user->student->email : null,
                 'full_name' => $user->full_name,
-                'student_number' => $user->student?->student_number,
                 'roles' => $user->userRoles->map(function ($userRole) {
                     return [
                         'role_id' => $userRole->role->role_id,
@@ -92,7 +92,7 @@ class UserController extends Controller
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at
             ];
-        });
+        }));
 
         return response()->json([
             'success' => true,
@@ -104,14 +104,14 @@ class UserController extends Controller
     /**
      * Get a specific user's details
      */
-    public function show($id): JsonResponse
+    public function show($student_number): JsonResponse
     {
         $user = User::with([
             'student',
             'userRoles.role',
             'userRoles.academicYear',
             'userRoles.role.permissions'
-        ])->find($id);
+        ])->where('student_number', $student_number)->first();
 
         if (!$user) {
             return response()->json([
@@ -121,13 +121,12 @@ class UserController extends Controller
         }
 
         $userData = [
-            'id' => $user->user_id,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'middle_initial' => $user->middle_initial,
-            'email' => $user->email,
-            'full_name' => $user->full_name,
-            'student_number' => $user->student?->student_number,
+            'student_number' => $user->student_number,
+            'first_name' => $user->student?->first_name,
+            'last_name' => $user->student?->last_name,
+            'middle_initial' => $user->student?->middle_initial,
+            'email' => $user->student?->email,
+            'full_name' => $user->student ? ($user->student->first_name . ' ' . $user->student->last_name) : null,
             'roles' => $user->userRoles->map(function ($userRole) {
                 return [
                     'role_id' => $userRole->role->role_id,
@@ -161,9 +160,9 @@ class UserController extends Controller
     /**
      * Update user info
      */
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, $student_number): JsonResponse
     {
-        $user = User::find($id);
+        $user = User::where('student_number', $student_number)->first();
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -175,9 +174,8 @@ class UserController extends Controller
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
             'middle_initial' => 'sometimes|nullable|string|max:10',
-            'email' => 'sometimes|required|email|unique:USER,email,' . $id . ',user_id',
             'password' => 'sometimes|nullable|string|min:6',
-            'student_number' => 'sometimes|nullable|string|unique:STUDENT,student_number,' . ($user->student?->student_id ?? 'NULL') . ',student_id'
+            'status' => 'sometimes|required|in:active,inactive'
         ]);
 
         if ($validator->fails()) {
@@ -188,37 +186,15 @@ class UserController extends Controller
             ], 400);
         }
 
-        $userData = $request->only(['first_name', 'last_name', 'middle_initial', 'email']);
+        $userData = $request->only(['first_name', 'last_name', 'middle_initial', 'status']);
         if ($request->filled('password')) {
             $userData['password'] = Hash::make($request->password);
         }
         $user->update($userData);
 
-        if ($request->filled('student_number')) {
-            if ($user->student) {
-                $user->student->update(['student_number' => $request->student_number]);
-            } else {
-                Student::create([
-                    'user_id' => $user->user_id,
-                    'student_number' => $request->student_number
-                ]);
-            }
-        }
-
-        $user->load(['student', 'userRoles.role', 'userRoles.academicYear']);
-
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $user->user_id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'middle_initial' => $user->middle_initial,
-                'email' => $user->email,
-                'full_name' => $user->full_name,
-                'student_number' => $user->student?->student_number,
-                'updated_at' => $user->updated_at
-            ],
+            'data' => $user,
             'message' => 'User updated successfully'
         ]);
     }
@@ -226,9 +202,9 @@ class UserController extends Controller
     /**
      * List all roles for a user
      */
-    public function getUserRoles($id): JsonResponse
+    public function getUserRoles($student_number): JsonResponse
     {
-        $user = User::with(['userRoles.role', 'userRoles.academicYear'])->find($id);
+        $user = User::with(['userRoles.role', 'userRoles.academicYear'])->where('student_number', $student_number)->first();
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -258,9 +234,9 @@ class UserController extends Controller
     /**
      * Assign a role to a user for a specific academic year
      */
-    public function assignRole(Request $request, $id): JsonResponse
+    public function assignRole(Request $request, $student_number): JsonResponse
     {
-        $user = User::find($id);
+        $user = User::where('student_number', $student_number)->first();
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -280,7 +256,7 @@ class UserController extends Controller
                 'errors' => $validator->errors()
             ], 400);
         }
-        $existingRole = UserRole::where('user_id', $id)
+        $existingRole = UserRole::where('student_number', $student_number)
             ->where('role_id', $request->role_id)
             ->where('academic_year_id', $request->academic_year_id)
             ->first();
@@ -291,7 +267,7 @@ class UserController extends Controller
             ], 400);
         }
         $userRole = UserRole::create([
-            'user_id' => $id,
+            'student_number' => $student_number,
             'role_id' => $request->role_id,
             'academic_year_id' => $request->academic_year_id,
             'start_date' => $request->start_date,
@@ -315,9 +291,9 @@ class UserController extends Controller
     /**
      * Remove a role from a user
      */
-    public function removeRole($userId, $userRoleId): JsonResponse
+    public function removeRole($student_number, $userRoleId): JsonResponse
     {
-        $userRole = UserRole::where('user_id', $userId)
+        $userRole = UserRole::where('student_number', $student_number)
             ->where('user_role_id', $userRoleId)
             ->first();
         if (!$userRole) {
@@ -390,7 +366,9 @@ class UserController extends Controller
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
                   ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%")
+                  ->orWhereHas('student', function ($sq) use ($query) {
+                      $sq->where('email', 'like', "%{$query}%");
+                  })
                   ->orWhereHas('student', function ($sq) use ($query) {
                       $sq->where('student_number', 'like', "%{$query}%");
                   });
@@ -420,12 +398,12 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            'student_number' => 'required|string|max:20|exists:student,student_number|unique:user,student_number',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'middle_initial' => 'nullable|string|max:10',
-            'email' => 'required|email|unique:USER,email',
+            'middle_initial' => 'sometimes|nullable|string|max:10',
             'password' => 'required|string|min:6',
-            'student_number' => 'nullable|string|unique:STUDENT,student_number'
+            'status' => 'required|in:active,inactive'
         ]);
 
         if ($validator->fails()) {
@@ -436,30 +414,13 @@ class UserController extends Controller
             ], 400);
         }
 
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middle_initial' => $request->middle_initial,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-        ]);
-
-        if ($request->filled('student_number')) {
-            Student::create([
-                'user_id' => $user->user_id,
-                'student_number' => $request->student_number
-            ]);
-        }
+        $userData = $request->only(['student_number', 'first_name', 'last_name', 'middle_initial', 'password', 'status']);
+        $userData['password'] = Hash::make($userData['password']);
+        $user = User::create($userData);
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $user->user_id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'student_number' => $request->student_number
-            ],
+            'data' => $user,
             'message' => 'User created successfully'
         ], 201);
     }

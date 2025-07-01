@@ -11,13 +11,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Event;
+use App\Models\Transaction;
+use App\Models\ItemCondition;
+use App\Models\TransactionLog;
+use App\Models\Task;
+use App\Models\Role;
+use App\Models\UserRole;
+use App\Models\Student;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'user';
-    protected $primaryKey = 'user_id';
+    protected $primaryKey = 'student_number';
+    public $incrementing = false;
+    protected $keyType = 'string';
     public $timestamps = true;
 
     /**
@@ -26,11 +36,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'middle_initial',
-        'email',
-        'password'
+        'student_number',
+        'password',
+        'status'
     ];
 
     /**
@@ -58,9 +66,9 @@ class User extends Authenticatable
     /**
      * Get the student record for this user
      */
-    public function student(): HasOne
+    public function student()
     {
-        return $this->hasOne(Student::class, 'user_id');
+        return $this->hasOne(Student::class, 'student_number', 'student_number');
     }
 
     /**
@@ -68,7 +76,7 @@ class User extends Authenticatable
      */
     public function userRoles(): HasMany
     {
-        return $this->hasMany(UserRole::class, 'user_id');
+        return $this->hasMany(UserRole::class, 'student_number', 'student_number');
     }
 
     /**
@@ -76,68 +84,56 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'USER_ROLE', 'user_id', 'role_id')
+        return $this->belongsToMany(Role::class, 'USER_ROLE', 'student_number', 'role_id')
                     ->withPivot('academic_year_id', 'start_date', 'end_date');
     }
 
     /**
      * Get the events created by this user
      */
-    public function createdEvents(): HasMany
+    public function createdEvents()
     {
-        return $this->hasMany(Event::class, 'created_by');
+        return $this->hasMany(Event::class, 'created_by', 'student_number');
     }
 
     /**
      * Get the transactions recorded by this user
      */
-    public function recordedTransactions(): HasMany
+    public function recordedTransactions()
     {
-        return $this->hasMany(Transaction::class, 'recorded_by');
+        return $this->hasMany(Transaction::class, 'recorded_by', 'student_number');
     }
 
     /**
      * Get the transactions verified by this user
      */
-    public function verifiedTransactions(): HasMany
+    public function verifiedTransactions()
     {
-        return $this->hasMany(Transaction::class, 'verified_by');
+        return $this->hasMany(Transaction::class, 'verified_by', 'student_number');
     }
 
     /**
      * Get the item conditions recorded by this user
      */
-    public function recordedItemConditions(): HasMany
+    public function recordedItemConditions()
     {
-        return $this->hasMany(ItemCondition::class, 'recorded_by');
+        return $this->hasMany(ItemCondition::class, 'recorded_by', 'student_number');
     }
 
     /**
      * Get the transaction logs for this user
      */
-    public function transactionLogs(): HasMany
+    public function transactionLogs()
     {
-        return $this->hasMany(TransactionLog::class, 'user_id');
+        return $this->hasMany(TransactionLog::class, 'student_number', 'student_number');
     }
 
     /**
      * Get the tasks assigned to this user
      */
-    public function assignedTasks(): HasMany
+    public function assignedTasks()
     {
-        return $this->hasMany(Task::class, 'assigned_to');
-    }
-
-    /**
-     * Get user's full name
-     */
-    public function getFullNameAttribute(): string
-    {
-        $name = $this->first_name . ' ' . $this->last_name;
-        if ($this->middle_initial) {
-            $name = $this->first_name . ' ' . $this->middle_initial . '. ' . $this->last_name;
-        }
-        return $name;
+        return $this->hasMany(Task::class, 'assigned_to', 'student_number');
     }
 
     /**

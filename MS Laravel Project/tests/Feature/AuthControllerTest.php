@@ -31,7 +31,7 @@ class AuthControllerTest extends TestCase
             'academic_year_id' => 1,
             'start_date' => '2024-06-01',
             'end_date' => '2025-05-31',
-            'description' => 'Academic Year 2024-2025'
+            'description' => '2024-2025'
         ]);
 
         // Create role
@@ -42,27 +42,30 @@ class AuthControllerTest extends TestCase
             'role_priority' => 99
         ]);
 
-        // Create user
-        $user = User::create([
-            'user_id' => 1,
+        // Create student first
+        $student = Student::create([
+            'student_number' => '2021-00112-TG-0',
             'first_name' => 'Janella',
             'last_name' => 'Boncodin',
             'middle_initial' => 'A',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
             'email' => 'janella.boncodin@example.com',
-            'password' => Hash::make('JanellaAnneBoncodin')
+            'academic_status' => 'active'
         ]);
 
-        // Create student
-        $student = Student::create([
-            'student_id' => 1,
-            'user_id' => $user->user_id,
-            'student_number' => '2021-00112-TG-0'
+        // Create user with matching student_number
+        $user = User::create([
+            'student_number' => '2021-00112-TG-0',
+            'password' => Hash::make('JanellaAnneBoncodin'),
+            'status' => 'active'
         ]);
 
         // Assign role to user
         UserRole::create([
             'user_role_id' => 1,
-            'user_id' => $user->user_id,
+            'student_number' => '2021-00112-TG-0',
             'role_id' => $role->role_id,
             'academic_year_id' => $academicYear->academic_year_id,
             'start_date' => now(),
@@ -79,18 +82,17 @@ class AuthControllerTest extends TestCase
             'student_number' => '2021-00112-TG-0',
             'password' => 'JanellaAnneBoncodin'
         ]);
-
+        dump($response->json());
         $response->assertStatus(200)
                 ->assertJsonStructure([
                     'success',
                     'message',
                     'data' => [
                         'user' => [
-                            'id',
+                            'student_number',
                             'first_name',
                             'last_name',
-                            'email',
-                            'student_number'
+                            'email'
                         ],
                         'roles',
                         'token',
@@ -198,24 +200,28 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_with_student_number_no_user()
     {
-        // Create a user without a student record
-        $user = User::firstOrCreate([
-            'email' => 'no.student@example.com'
-        ], [
+        // Create a student without a user account
+        Student::create([
+            'student_number' => '2021-99999-TG-0',
             'first_name' => 'No',
-            'last_name' => 'Student',
-            'password' => Hash::make('NoStudent')
+            'last_name' => 'User',
+            'middle_initial' => null,
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'email' => 'no.user@example.com',
+            'academic_status' => 'active'
         ]);
 
         $response = $this->postJson('/api/auth/login', [
             'student_number' => '2021-99999-TG-0',
-            'password' => 'NoStudent'
+            'password' => 'NoUser'
         ]);
 
         $response->assertStatus(404)
                 ->assertJson([
                     'success' => false,
-                    'message' => 'Student number not found'
+                    'message' => 'User account not found'
                 ]);
     }
 
@@ -224,20 +230,25 @@ class AuthControllerTest extends TestCase
      */
     public function test_login_with_user_no_password()
     {
-        // Create a user with an empty password string instead of null
-        $user = User::firstOrCreate([
-            'email' => 'no.password@example.com'
-        ], [
+        // Create student record for this user first
+        Student::firstOrCreate([
+            'student_number' => '2021-99998-TG-0',
             'first_name' => 'No',
             'last_name' => 'Password',
-            'password' => '' // Use empty string instead of null
+            'middle_initial' => null,
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'email' => 'no.password@example.com',
+            'academic_status' => 'active'
         ]);
 
-        // Create student record for this user
-        $student = Student::firstOrCreate([
-            'student_number' => '2021-99998-TG-0'
+        // Now create a user with an empty password string instead of null
+        User::firstOrCreate([
+            'student_number' => '2021-99998-TG-0',
         ], [
-            'user_id' => $user->user_id
+            'password' => '', // Use empty string instead of null
+            'status' => 'active'
         ]);
 
         $response = $this->postJson('/api/auth/login', [
@@ -293,7 +304,7 @@ class AuthControllerTest extends TestCase
             'student_number' => '2021-00112-TG-0',
             'password' => 'JanellaAnneBoncodin'
         ]);
-
+        dump($loginResponse->json());
         $loginResponse->assertStatus(200);
         $token = $loginResponse->json('data.token');
 
@@ -319,7 +330,7 @@ class AuthControllerTest extends TestCase
             'student_number' => '2021-00112-TG-0',
             'password' => 'JanellaAnneBoncodin'
         ]);
-
+        dump($loginResponse->json());
         $loginResponse->assertStatus(200);
         $token = $loginResponse->json('data.token');
 
@@ -333,11 +344,10 @@ class AuthControllerTest extends TestCase
                     'success',
                     'data' => [
                         'user' => [
-                            'id',
+                            'student_number',
                             'first_name',
                             'last_name',
-                            'email',
-                            'student_number'
+                            'email'
                         ]
                     ]
                 ])
