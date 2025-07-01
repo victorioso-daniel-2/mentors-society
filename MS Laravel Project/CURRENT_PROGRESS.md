@@ -129,6 +129,7 @@
 
 ### **✅ User Types & Roles**
 - ✅ **President** - Highest priority, all permissions
+
 - ✅ **Vice President** - High priority, most permissions
 - ✅ **Secretary** - Medium priority, administrative permissions
 - ✅ **Treasurer** - Medium priority, financial permissions
