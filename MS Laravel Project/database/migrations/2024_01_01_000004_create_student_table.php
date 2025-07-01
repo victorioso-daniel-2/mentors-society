@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('student', function (Blueprint $table) {
-            $table->id('student_id');
-            $table->string('student_number', 20)->unique();
-            $table->foreignId('user_id')->constrained('user', 'user_id')->onDelete('cascade');
+            $table->string('student_number', 20)->primary();
+            $table->string('last_name', 50);
+            $table->string('first_name', 50);
+            $table->string('middle_initial', 5)->nullable();
             $table->string('course', 100)->nullable();
-            $table->string('year_level', 10)->nullable();
+            $table->string('year_level', 50)->nullable();
             $table->string('section', 10)->nullable();
+            $table->enum('academic_status', ['active', 'dropped', 'shifted', 'graduated'])->default('active'); // Academic/enrollment status
+            $table->string('email', 100)->unique(); // Student email
         });
     }
 

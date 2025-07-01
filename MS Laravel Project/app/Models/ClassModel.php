@@ -34,11 +34,11 @@ class ClassModel extends Model
     }
 
     /**
-     * Get the class president (user)
+     * Get the class president (student)
      */
     public function classPresident(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'class_president_id', 'user_id');
+        return $this->belongsTo(Student::class, 'class_president_id', 'student_number');
     }
 
     /**

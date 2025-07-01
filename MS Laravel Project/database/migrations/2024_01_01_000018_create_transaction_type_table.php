@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('transaction_type', function (Blueprint $table) {
             $table->id('type_id');
             $table->string('type_name', 50)->unique();
+            $table->enum('direction', ['income', 'outcome']);
         });
     }
 

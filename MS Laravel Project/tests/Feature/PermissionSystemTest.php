@@ -41,54 +41,62 @@ class PermissionSystemTest extends TestCase
             'description' => 'Academic Year 2024-2025'
         ]);
 
-        // Create test users
-        $this->president = User::firstOrCreate([
-            'user_id' => 1
+        // Create students FIRST
+        $this->presidentStudent = Student::firstOrCreate([
+            'student_number' => '2021-00001-TG-0'
         ], [
             'first_name' => 'John',
             'last_name' => 'President',
+            'middle_initial' => 'A',
             'email' => 'president@example.com',
-            'password' => Hash::make('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active',
         ]);
-
-        $this->auditor = User::firstOrCreate([
-            'user_id' => 2
+        $this->auditorStudent = Student::firstOrCreate([
+            'student_number' => '2021-00002-TG-0'
         ], [
             'first_name' => 'Jane',
             'last_name' => 'Auditor',
+            'middle_initial' => 'B',
             'email' => 'auditor@example.com',
-            'password' => Hash::make('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active',
         ]);
-
-        $this->student = User::firstOrCreate([
-            'user_id' => 3
+        $this->regularStudent = Student::firstOrCreate([
+            'student_number' => '2021-00003-TG-0'
         ], [
             'first_name' => 'Bob',
             'last_name' => 'Student',
+            'middle_initial' => 'C',
             'email' => 'student@example.com',
-            'password' => Hash::make('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active',
         ]);
 
-        // Create students
-        $this->presidentStudent = Student::firstOrCreate([
-            'student_id' => 1
-        ], [
-            'user_id' => $this->president->user_id,
+        // Now create users with matching student_number
+        $this->president = User::firstOrCreate([
             'student_number' => '2021-00001-TG-0'
-        ]);
-
-        $this->auditorStudent = Student::firstOrCreate([
-            'student_id' => 2
         ], [
-            'user_id' => $this->auditor->user_id,
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $this->auditor = User::firstOrCreate([
             'student_number' => '2021-00002-TG-0'
-        ]);
-
-        $this->regularStudent = Student::firstOrCreate([
-            'student_id' => 3
         ], [
-            'user_id' => $this->student->user_id,
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $this->student = User::firstOrCreate([
             'student_number' => '2021-00003-TG-0'
+        ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
         ]);
 
         // Get roles
@@ -108,31 +116,29 @@ class PermissionSystemTest extends TestCase
             'role_priority' => 99
         ]);
 
-        // Assign roles
+        // Assign roles (use student_number)
         UserRole::firstOrCreate([
             'user_role_id' => 1
         ], [
-            'user_id' => $this->president->user_id,
+            'student_number' => '2021-00001-TG-0',
             'role_id' => $this->presidentRole->role_id,
             'academic_year_id' => $academicYear->academic_year_id,
             'start_date' => now(),
             'end_date' => null
         ]);
-
         UserRole::firstOrCreate([
             'user_role_id' => 2
         ], [
-            'user_id' => $this->auditor->user_id,
+            'student_number' => '2021-00002-TG-0',
             'role_id' => $this->auditorRole->role_id,
             'academic_year_id' => $academicYear->academic_year_id,
             'start_date' => now(),
             'end_date' => null
         ]);
-
         UserRole::firstOrCreate([
             'user_role_id' => 3
         ], [
-            'user_id' => $this->student->user_id,
+            'student_number' => '2021-00003-TG-0',
             'role_id' => $this->studentRole->role_id,
             'academic_year_id' => $academicYear->academic_year_id,
             'start_date' => now(),
@@ -145,7 +151,8 @@ class PermissionSystemTest extends TestCase
      */
     public function test_president_has_all_permissions()
     {
-        $presidentUserRole = $this->president->userRoles()->first();
+        $presidentStudent = $this->presidentStudent;
+        $presidentUser = $this->president;
         
         // Test some key permissions that President should have
         $keyPermissions = [
@@ -157,7 +164,7 @@ class PermissionSystemTest extends TestCase
 
         foreach ($keyPermissions as $permission) {
             $this->assertTrue(
-                $presidentUserRole->hasPermission($permission),
+                $presidentUser->hasPermission($permission),
                 "President should have permission: {$permission}"
             );
         }
@@ -168,7 +175,8 @@ class PermissionSystemTest extends TestCase
      */
     public function test_auditor_has_correct_base_permissions()
     {
-        $auditorUserRole = $this->auditor->userRoles()->first();
+        $auditorStudent = $this->auditorStudent;
+        $auditorUser = $this->auditor;
         
         // Permissions Auditor should have
         $shouldHave = [
@@ -181,7 +189,7 @@ class PermissionSystemTest extends TestCase
 
         foreach ($shouldHave as $permission) {
             $this->assertTrue(
-                $auditorUserRole->hasPermission($permission),
+                $auditorUser->hasPermission($permission),
                 "Auditor should have permission: {$permission}"
             );
         }
@@ -197,7 +205,7 @@ class PermissionSystemTest extends TestCase
 
         foreach ($shouldNotHave as $permission) {
             $this->assertFalse(
-                $auditorUserRole->hasPermission($permission),
+                $auditorUser->hasPermission($permission),
                 "Auditor should NOT have permission: {$permission}"
             );
         }
@@ -208,7 +216,8 @@ class PermissionSystemTest extends TestCase
      */
     public function test_student_has_limited_permissions()
     {
-        $studentUserRole = $this->student->userRoles()->first();
+        $studentStudent = $this->regularStudent;
+        $studentUser = $this->student;
         
         // Permissions Student should have
         $shouldHave = [
@@ -219,7 +228,7 @@ class PermissionSystemTest extends TestCase
 
         foreach ($shouldHave as $permission) {
             $this->assertTrue(
-                $studentUserRole->hasPermission($permission),
+                $studentUser->hasPermission($permission),
                 "Student should have permission: {$permission}"
             );
         }
@@ -237,7 +246,7 @@ class PermissionSystemTest extends TestCase
 
         foreach ($shouldNotHave as $permission) {
             $this->assertFalse(
-                $studentUserRole->hasPermission($permission),
+                $studentUser->hasPermission($permission),
                 "Student should NOT have permission: {$permission}"
             );
         }
@@ -248,31 +257,32 @@ class PermissionSystemTest extends TestCase
      */
     public function test_custom_permission_override()
     {
-        $auditorUserRole = $this->auditor->userRoles()->first();
+        $auditorStudent = $this->auditorStudent;
+        $auditorUser = $this->auditor;
         $inventoryCreatePermission = Permission::where('permission_name', 'inventory.create')->first();
 
         // Initially, auditor should NOT have inventory.create permission
-        $this->assertFalse($this->auditor->hasPermission('inventory.create'));
+        $this->assertFalse($auditorUser->hasPermission('inventory.create'));
 
         // Add custom permission override
         UserRolePermission::create([
-            'user_role_id' => $auditorUserRole->user_role_id,
+            'user_role_id' => $auditorUser->userRoles()->first()->user_role_id,
             'permission_id' => $inventoryCreatePermission->permission_id,
             'is_granted' => true,
             'reason' => 'Special assignment for inventory management'
         ]);
 
         // Now auditor should have inventory.create permission
-        $this->assertTrue($this->auditor->hasPermission('inventory.create'));
+        $this->assertTrue($auditorUser->hasPermission('inventory.create'));
 
         // Test revoking permission
         UserRolePermission::where([
-            'user_role_id' => $auditorUserRole->user_role_id,
+            'user_role_id' => $auditorUser->userRoles()->first()->user_role_id,
             'permission_id' => $inventoryCreatePermission->permission_id
         ])->update(['is_granted' => false]);
 
         // Auditor should NOT have the permission again
-        $this->assertFalse($this->auditor->hasPermission('inventory.create'));
+        $this->assertFalse($auditorUser->hasPermission('inventory.create'));
     }
 
     /**
@@ -342,17 +352,28 @@ class PermissionSystemTest extends TestCase
         RolePermission::firstOrCreate(['role_id' => $secretaryGeneral->role_id, 'permission_id' => $viewPermission->permission_id]);
 
         // Create user with multiple roles
-        $user = User::firstOrCreate([
-            'email' => 'test@example.com'
-        ], [
+        $student = Student::firstOrCreate([
+            'student_number' => '2024-TEST-001',
+            'email' => 'test@example.com',
             'first_name' => 'Test',
             'last_name' => 'User',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'A',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
+        $testUser = User::firstOrCreate([
+            'student_number' => '2024-TEST-001'
+        ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $user = $testUser;
 
         // Assign roles to user
         UserRole::firstOrCreate([
-            'user_id' => $user->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $president->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -361,7 +382,7 @@ class PermissionSystemTest extends TestCase
         ]);
 
         UserRole::firstOrCreate([
-            'user_id' => $user->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $vpInternal->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -398,17 +419,28 @@ class PermissionSystemTest extends TestCase
         RolePermission::firstOrCreate(['role_id' => $treasurer->role_id, 'permission_id' => $financialEdit->permission_id]);
         RolePermission::firstOrCreate(['role_id' => $auditor->role_id, 'permission_id' => $financialView->permission_id]);
 
-        // Create user with treasurer role
-        $user = User::firstOrCreate([
-            'email' => 'treasurer@example.com'
-        ], [
+        // Create student and user for treasurer
+        $treasurerStudent = Student::firstOrCreate([
+            'student_number' => '2024-TREASURER-001',
+            'email' => 'treasurer@example.com',
             'first_name' => 'Test',
             'last_name' => 'Treasurer',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'B',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
+        $treasurerUser = User::firstOrCreate([
+            'student_number' => '2024-TREASURER-001'
+        ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $user = $treasurerUser;
 
         $userRole = UserRole::firstOrCreate([
-            'user_id' => $user->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $treasurer->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -476,17 +508,28 @@ class PermissionSystemTest extends TestCase
         RolePermission::firstOrCreate(['role_id' => $secretaryGeneral->role_id, 'permission_id' => $userView->permission_id]);
 
         // Create user
-        $user = User::firstOrCreate([
-            'email' => 'test@example.com'
-        ], [
+        $student = Student::firstOrCreate([
+            'student_number' => '2024-TEST-001',
+            'email' => 'test@example.com',
             'first_name' => 'Test',
             'last_name' => 'User',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'A',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
+        $testUser = User::firstOrCreate([
+            'student_number' => '2024-TEST-001'
+        ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $user = $testUser;
 
         // Assign roles for different academic years
         UserRole::firstOrCreate([
-            'user_id' => $user->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $president->role_id,
             'academic_year_id' => $academicYear2024->academic_year_id
         ], [
@@ -495,7 +538,7 @@ class PermissionSystemTest extends TestCase
         ]);
 
         UserRole::firstOrCreate([
-            'user_id' => $user->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $secretaryGeneral->role_id,
             'academic_year_id' => $academicYear2025->academic_year_id
         ], [
@@ -557,41 +600,78 @@ class PermissionSystemTest extends TestCase
         RolePermission::firstOrCreate(['role_id' => $msRepresentative->role_id, 'permission_id' => $eventCreate->permission_id]);
 
         // Create users for each role
-        $proMathUser = User::firstOrCreate([
-            'email' => 'promath@example.com'
-        ], [
+        $proMathStudent = Student::firstOrCreate([
+            'student_number' => '2024-PROMATH-001',
+            'email' => 'promath@example.com',
             'first_name' => 'PRO',
             'last_name' => 'Math',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'C',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
-        $proEnglishUser = User::firstOrCreate([
-            'email' => 'proenglish@example.com'
+        $proMathUser = User::firstOrCreate([
+            'student_number' => '2024-PROMATH-001'
         ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $proEnglishStudent = Student::firstOrCreate([
+            'student_number' => '2024-PROENGLISH-001',
+            'email' => 'proenglish@example.com',
             'first_name' => 'PRO',
             'last_name' => 'English',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'D',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
-        $businessManagerUser = User::firstOrCreate([
-            'email' => 'business@example.com'
+        $proEnglishUser = User::firstOrCreate([
+            'student_number' => '2024-PROENGLISH-001'
         ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $businessManagerStudent = Student::firstOrCreate([
+            'student_number' => '2024-BUSINESS-001',
+            'email' => 'business@example.com',
             'first_name' => 'Business',
             'last_name' => 'Manager',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'E',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
-        $msRepUser = User::firstOrCreate([
-            'email' => 'msrep@example.com'
+        $businessManagerUser = User::firstOrCreate([
+            'student_number' => '2024-BUSINESS-001'
         ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
+        ]);
+        $msRepStudent = Student::firstOrCreate([
+            'student_number' => '2024-MSREP-001',
+            'email' => 'msrep@example.com',
             'first_name' => 'MS',
             'last_name' => 'Rep',
-            'password' => Hash::make('password123')
+            'middle_initial' => 'F',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        $msRepUser = User::firstOrCreate([
+            'student_number' => '2024-MSREP-001'
+        ], [
+            'password' => Hash::make('password123'),
+            'status' => 'active'
         ]);
 
         // Assign roles
         UserRole::firstOrCreate([
-            'user_id' => $proMathUser->user_id,
+            'student_number' => $proMathUser->student_number,
             'role_id' => $proMath->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -600,7 +680,7 @@ class PermissionSystemTest extends TestCase
         ]);
 
         UserRole::firstOrCreate([
-            'user_id' => $proEnglishUser->user_id,
+            'student_number' => $proEnglishUser->student_number,
             'role_id' => $proEnglish->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -609,7 +689,7 @@ class PermissionSystemTest extends TestCase
         ]);
 
         UserRole::firstOrCreate([
-            'user_id' => $businessManagerUser->user_id,
+            'student_number' => $businessManagerUser->student_number,
             'role_id' => $businessManagerMath->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [
@@ -618,7 +698,7 @@ class PermissionSystemTest extends TestCase
         ]);
 
         UserRole::firstOrCreate([
-            'user_id' => $msRepUser->user_id,
+            'student_number' => $msRepUser->student_number,
             'role_id' => $msRepresentative->role_id,
             'academic_year_id' => $academicYear->academic_year_id
         ], [

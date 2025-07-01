@@ -11,13 +11,13 @@ return new class extends Migration
         Schema::create('item_borrowing', function (Blueprint $table) {
             $table->id('borrowing_id');
             $table->unsignedBigInteger('item_id');
-            $table->unsignedBigInteger('student_id');
+            $table->string('student_number', 20);
             $table->timestamp('borrow_date')->useCurrent();
             $table->timestamp('return_date')->nullable();
             $table->unsignedBigInteger('condition_id_borrow')->nullable();
             $table->unsignedBigInteger('condition_id_return')->nullable();
             $table->foreign('item_id')->references('item_id')->on('inventory_item')->onDelete('cascade');
-            $table->foreign('student_id')->references('student_id')->on('student')->onDelete('cascade');
+            $table->foreign('student_number')->references('student_number')->on('student')->onDelete('cascade');
             $table->foreign('condition_id_borrow')->references('condition_id')->on('item_condition')->onDelete('set null');
             $table->foreign('condition_id_return')->references('condition_id')->on('item_condition')->onDelete('set null');
         });

@@ -17,6 +17,11 @@ class StudentControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $academicYear;
+    protected $testClass;
+    protected $student;
+    protected $user;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,12 +38,23 @@ class StudentControllerTest extends TestCase
             'academic_year_id' => $this->academicYear->academic_year_id
         ]);
 
-        // Create test user with president role
-        $this->user = User::create([
+        // Create test student for user
+        $this->student = Student::create([
+            'student_number' => '2024-STUDENT-001',
             'first_name' => 'Test',
             'last_name' => 'President',
+            'middle_initial' => 'A',
             'email' => 'president@test.com',
-            'password' => bcrypt('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        // Create test user with president role
+        $this->user = User::create([
+            'student_number' => '2024-STUDENT-001',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
         $presidentRole = Role::create([
@@ -49,7 +65,7 @@ class StudentControllerTest extends TestCase
 
         // Assign president role to user using UserRole directly
         UserRole::create([
-            'user_id' => $this->user->user_id,
+            'student_number' => $this->user->student_number,
             'role_id' => $presidentRole->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()
@@ -68,14 +84,20 @@ class StudentControllerTest extends TestCase
                     'data' => [
                         'data' => [
                             '*' => [
-                                'student_id',
                                 'student_number',
+                                'first_name',
+                                'last_name',
+                                'middle_initial',
+                                'email',
+                                'course',
+                                'year_level',
+                                'section',
+                                'academic_status',
                                 'user' => [
-                                    'user_id',
-                                    'first_name',
-                                    'last_name',
-                                    'email'
-                                ]
+                                    'student_number',
+                                    'status'
+                                ],
+                                'student_classes'
                             ]
                         ]
                     ],
@@ -112,6 +134,10 @@ class StudentControllerTest extends TestCase
             'email' => 'john.doe@test.com',
             'password' => 'password123',
             'student_number' => '2024-0001',
+            'course' => 'BSIT',
+            'year_level' => 'First Year',
+            'section' => 'A',
+            'academic_status' => 'active',
             'classes' => [
                 [
                     'class_id' => $this->testClass->class_id,
@@ -122,7 +148,6 @@ class StudentControllerTest extends TestCase
         ];
 
         $response = $this->postJson('/api/students', $studentData);
-
         $response->assertStatus(201)
                 ->assertJson([
                     'success' => true,
@@ -130,25 +155,16 @@ class StudentControllerTest extends TestCase
                 ])
                 ->assertJsonStructure([
                     'data' => [
-                        'student_id',
                         'student_number',
-                        'user' => [
-                            'user_id',
-                            'first_name',
-                            'last_name',
-                            'email'
-                        ]
+                        'email'
                     ]
                 ]);
 
-        $this->assertDatabaseHas('user', [
-            'email' => 'john.doe@test.com',
-            'first_name' => 'John',
-            'last_name' => 'Doe'
-        ]);
-
         $this->assertDatabaseHas('student', [
-            'student_number' => '2024-0001'
+            'student_number' => '2024-0001',
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@test.com'
         ]);
     }
 
@@ -162,17 +178,23 @@ class StudentControllerTest extends TestCase
 
     public function test_it_prevents_duplicate_student_number()
     {
-        // Create first student
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'First',
-                'last_name' => 'Student',
-                'email' => 'first@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0001'
+        // Create first student and user
+        Student::create([
+            'student_number' => '2024-0001',
+            'first_name' => 'First',
+            'last_name' => 'Student',
+            'middle_initial' => 'B',
+            'email' => 'first@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
+        User::create([
+            'student_number' => '2024-0001',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
+        ]);
         // Try to create second student with same number
         $response = $this->postJson('/api/students', [
             'first_name' => 'Second',
@@ -181,53 +203,66 @@ class StudentControllerTest extends TestCase
             'password' => 'password123',
             'student_number' => '2024-0001'
         ]);
-
         $response->assertStatus(422)
                 ->assertJsonValidationErrors(['student_number']);
     }
 
     public function test_it_prevents_duplicate_email()
     {
-        // Create first user
-        User::create([
+        // Create first student and user
+        Student::create([
+            'student_number' => '2024-0002',
             'first_name' => 'First',
             'last_name' => 'User',
+            'middle_initial' => 'C',
             'email' => 'duplicate@test.com',
-            'password' => bcrypt('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
+        User::create([
+            'student_number' => '2024-0002',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
+        ]);
         // Try to create student with same email
         $response = $this->postJson('/api/students', [
             'first_name' => 'Second',
             'last_name' => 'User',
             'email' => 'duplicate@test.com',
             'password' => 'password123',
-            'student_number' => '2024-0002'
+            'student_number' => '2024-0003'
         ]);
-
         $response->assertStatus(422)
                 ->assertJsonValidationErrors(['email']);
     }
 
     public function test_it_can_get_specific_student()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Test',
-                'last_name' => 'Student',
-                'email' => 'test.student@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0003'
+        Student::create([
+            'student_number' => '2024-0003',
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'middle_initial' => 'D',
+            'email' => 'test.student@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'First Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        User::create([
+            'student_number' => '2024-0003',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
-        $response = $this->getJson("/api/students/{$student->student_id}");
+        $response = $this->getJson("/api/students/2024-0003");
 
         $response->assertStatus(200)
                 ->assertJson([
                     'success' => true,
                     'data' => [
-                        'student_id' => $student->student_id,
                         'student_number' => '2024-0003'
                     ]
                 ]);
@@ -246,24 +281,32 @@ class StudentControllerTest extends TestCase
 
     public function test_it_can_update_student()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Original',
-                'last_name' => 'Student',
-                'email' => 'original@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0004'
+        Student::create([
+            'student_number' => '2024-0004',
+            'first_name' => 'Original',
+            'last_name' => 'Student',
+            'middle_initial' => 'E',
+            'email' => 'original@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'First Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        User::create([
+            'student_number' => '2024-0004',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
         $updateData = [
             'first_name' => 'Updated',
             'last_name' => 'Student',
+            'middle_initial' => 'E',
             'email' => 'updated@test.com',
             'student_number' => '2024-0005'
         ];
 
-        $response = $this->putJson("/api/students/{$student->student_id}", $updateData);
+        $response = $this->putJson("/api/students/2024-0004", $updateData);
 
         $response->assertStatus(200)
                 ->assertJson([
@@ -271,31 +314,33 @@ class StudentControllerTest extends TestCase
                     'message' => 'Student updated successfully'
                 ]);
 
-        $this->assertDatabaseHas('user', [
-            'user_id' => $student->user_id,
+        $this->assertDatabaseHas('student', [
+            'student_number' => '2024-0004',
             'first_name' => 'Updated',
             'email' => 'updated@test.com'
-        ]);
-
-        $this->assertDatabaseHas('student', [
-            'student_id' => $student->student_id,
-            'student_number' => '2024-0005'
         ]);
     }
 
     public function test_it_can_delete_student()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Delete',
-                'last_name' => 'Student',
-                'email' => 'delete@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0006'
+        Student::create([
+            'student_number' => '2024-0006',
+            'first_name' => 'Delete',
+            'last_name' => 'Student',
+            'middle_initial' => 'F',
+            'email' => 'delete@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'First Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        User::create([
+            'student_number' => '2024-0006',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
-        $response = $this->deleteJson("/api/students/{$student->student_id}");
+        $response = $this->deleteJson("/api/students/2024-0006");
 
         $response->assertStatus(200)
                 ->assertJson([
@@ -304,35 +349,42 @@ class StudentControllerTest extends TestCase
                 ]);
 
         $this->assertDatabaseMissing('student', [
-            'student_id' => $student->student_id
+            'student_number' => '2024-0006'
         ]);
 
         $this->assertDatabaseMissing('user', [
-            'user_id' => $student->user_id
+            'student_number' => '2024-0006'
         ]);
     }
 
     public function test_it_can_get_student_classes()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Class',
-                'last_name' => 'Student',
-                'email' => 'class@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0007'
+        Student::create([
+            'student_number' => '2024-0007',
+            'first_name' => 'Class',
+            'last_name' => 'Student',
+            'middle_initial' => 'G',
+            'email' => 'class@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'First Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        User::create([
+            'student_number' => '2024-0007',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
         // Assign class to student
         StudentClass::create([
-            'student_id' => $student->student_id,
+            'student_number' => '2024-0007',
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'year_level' => 'First Year'
         ]);
 
-        $response = $this->getJson("/api/students/{$student->student_id}/classes");
+        $response = $this->getJson("/api/students/2024-0007/classes");
 
         $response->assertStatus(200)
                 ->assertJson([
@@ -342,7 +394,7 @@ class StudentControllerTest extends TestCase
                 ->assertJsonStructure([
                     'data' => [
                         '*' => [
-                            'student_id',
+                            'student_number',
                             'class_id',
                             'academic_year_id',
                             'year_level'
@@ -353,14 +405,21 @@ class StudentControllerTest extends TestCase
 
     public function test_it_can_assign_class_to_student()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Assign',
-                'last_name' => 'Student',
-                'email' => 'assign@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0008'
+        Student::create([
+            'student_number' => '2024-0008',
+            'first_name' => 'Assign',
+            'last_name' => 'Student',
+            'middle_initial' => 'H',
+            'email' => 'assign@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'Second Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        User::create([
+            'student_number' => '2024-0008',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
         $classData = [
@@ -369,7 +428,7 @@ class StudentControllerTest extends TestCase
             'year_level' => 'Second Year'
         ];
 
-        $response = $this->postJson("/api/students/{$student->student_id}/classes", $classData);
+        $response = $this->postJson("/api/students/2024-0008/classes", $classData);
 
         $response->assertStatus(201)
                 ->assertJson([
@@ -378,7 +437,7 @@ class StudentControllerTest extends TestCase
                 ]);
 
         $this->assertDatabaseHas('student_class', [
-            'student_id' => $student->student_id,
+            'student_number' => '2024-0008',
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'year_level' => 'Second Year'
@@ -387,31 +446,35 @@ class StudentControllerTest extends TestCase
 
     public function test_it_prevents_duplicate_class_assignment()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Duplicate',
-                'last_name' => 'Student',
-                'email' => 'duplicate.class@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0009'
+        Student::create([
+            'student_number' => '2024-0009',
+            'first_name' => 'Duplicate',
+            'last_name' => 'Student',
+            'middle_initial' => 'I',
+            'email' => 'duplicate.class@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'Third Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
+        User::create([
+            'student_number' => '2024-0009',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
+        ]);
         // Assign class first time
         StudentClass::create([
-            'student_id' => $student->student_id,
+            'student_number' => '2024-0009',
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'year_level' => 'Third Year'
         ]);
-
         // Try to assign same class again
-        $response = $this->postJson("/api/students/{$student->student_id}/classes", [
+        $response = $this->postJson("/api/students/2024-0009/classes", [
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'year_level' => 'Fourth Year'
         ]);
-
         $response->assertStatus(400)
                 ->assertJson([
                     'success' => false,
@@ -421,37 +484,40 @@ class StudentControllerTest extends TestCase
 
     public function test_it_can_remove_class_assignment()
     {
-        $student = Student::create([
-            'user_id' => User::create([
-                'first_name' => 'Remove',
-                'last_name' => 'Student',
-                'email' => 'remove@test.com',
-                'password' => bcrypt('password123')
-            ])->user_id,
-            'student_number' => '2024-0010'
+        Student::create([
+            'student_number' => '2024-0010',
+            'first_name' => 'Remove',
+            'last_name' => 'Student',
+            'middle_initial' => 'J',
+            'email' => 'remove@test.com',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
-
+        User::create([
+            'student_number' => '2024-0010',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
+        ]);
         // Assign class
         StudentClass::create([
-            'student_id' => $student->student_id,
+            'student_number' => '2024-0010',
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'year_level' => 'Fourth Year'
         ]);
-
-        $response = $this->deleteJson("/api/students/{$student->student_id}/classes", [
+        $response = $this->deleteJson("/api/students/2024-0010/classes", [
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id
         ]);
-
         $response->assertStatus(200)
                 ->assertJson([
                     'success' => true,
                     'message' => 'Class assignment removed successfully'
                 ]);
-
         $this->assertDatabaseMissing('student_class', [
-            'student_id' => $student->student_id,
+            'student_number' => '2024-0010',
             'class_id' => $this->testClass->class_id,
             'academic_year_id' => $this->academicYear->academic_year_id
         ]);

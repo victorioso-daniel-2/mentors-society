@@ -5,56 +5,69 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\EventRegistration;
+use App\Models\EventParticipation;
+use App\Models\ItemBorrowing;
+use App\Models\StudentClass;
 
 class Student extends Model
 {
     protected $table = 'student';
-    protected $primaryKey = 'student_id';
+    protected $primaryKey = 'student_number';
+    public $incrementing = false;
+    protected $keyType = 'string';
     public $timestamps = false;
 
     protected $fillable = [
-        'user_id',
-        'student_number'
+        'student_number',
+        'first_name',
+        'last_name',
+        'middle_initial',
+        'course',
+        'year_level',
+        'section',
+        'email',
+        'academic_status'
     ];
 
     /**
      * Get the user for this student
      */
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->hasOne(User::class, 'student_number', 'student_number');
     }
 
     /**
      * Get the classes for this student
      */
-    public function classes(): HasMany
+    public function studentClasses()
     {
-        return $this->hasMany(StudentClass::class, 'student_id');
+        return $this->hasMany(StudentClass::class, 'student_number', 'student_number');
     }
 
     /**
      * Get the event registrations for this student
      */
-    public function eventRegistrations(): HasMany
+    public function eventRegistrations()
     {
-        return $this->hasMany(EventRegistration::class, 'student_id');
+        return $this->hasMany(EventRegistration::class, 'student_number', 'student_number');
     }
 
     /**
      * Get the event participations for this student
      */
-    public function eventParticipations(): HasMany
+    public function eventParticipations()
     {
-        return $this->hasMany(EventParticipation::class, 'student_id');
+        return $this->hasMany(EventParticipation::class, 'student_number', 'student_number');
     }
 
     /**
      * Get the item borrowings for this student
      */
-    public function itemBorrowings(): HasMany
+    public function itemBorrowings()
     {
-        return $this->hasMany(ItemBorrowing::class, 'student_id');
+        return $this->hasMany(ItemBorrowing::class, 'student_number', 'student_number');
     }
 
     /**
@@ -62,7 +75,7 @@ class Student extends Model
      */
     public function currentClasses()
     {
-        return $this->classes()
+        return $this->studentClasses()
                    ->whereHas('academicYear', function ($query) {
                        $query->where('start_date', '<=', now())
                              ->where('end_date', '>=', now());
@@ -74,22 +87,6 @@ class Student extends Model
      */
     public function isEnrolledInClass(int $classId): bool
     {
-        return $this->classes()->where('class_id', $classId)->exists();
-    }
-
-    /**
-     * Get student's full name
-     */
-    public function getFullNameAttribute(): string
-    {
-        return $this->user->first_name . ' ' . $this->user->last_name;
-    }
-
-    /**
-     * Get student's email
-     */
-    public function getEmailAttribute(): string
-    {
-        return $this->user->email;
+        return $this->studentClasses()->where('class_id', $classId)->exists();
     }
 } 

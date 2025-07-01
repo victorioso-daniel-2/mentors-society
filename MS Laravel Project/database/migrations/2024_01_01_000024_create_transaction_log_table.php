@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('transaction_log', function (Blueprint $table) {
             $table->id('log_id');
-            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('student_number', 20)->nullable();
             $table->string('action', 100);
             $table->string('entity_type', 50);
             $table->integer('entity_id');
             $table->text('before_state')->nullable();
             $table->text('after_state')->nullable();
             $table->timestamp('action_date')->useCurrent();
-            $table->foreign('user_id')->references('user_id')->on('user')->onDelete('set null');
+            $table->foreign('student_number')->references('student_number')->on('user')->onDelete('set null');
         });
     }
 

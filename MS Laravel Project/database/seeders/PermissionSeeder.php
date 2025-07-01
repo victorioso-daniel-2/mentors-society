@@ -123,6 +123,13 @@ class PermissionSeeder extends Seeder
             ['permission_name' => 'class.manage_subjects', 'description' => 'Manage subjects for own class'],
             ['permission_name' => 'class.manage_schedules', 'description' => 'Manage schedules for own class'],
             ['permission_name' => 'class.manage_professors', 'description' => 'Manage professors for own class'],
+
+            // Add permissions for transaction types and event fees
+            ['permission_name' => 'transaction_type.view', 'description' => 'View transaction types'],
+            ['permission_name' => 'transaction_type.create', 'description' => 'Create transaction types'],
+            ['permission_name' => 'transaction_type.update', 'description' => 'Update transaction types'],
+            ['permission_name' => 'transaction_type.delete', 'description' => 'Delete transaction types'],
+            ['permission_name' => 'event_fee.manage', 'description' => 'Manage event fees'],
         ];
 
         // Create all permissions

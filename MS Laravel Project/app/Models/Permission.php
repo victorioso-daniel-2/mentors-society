@@ -30,7 +30,7 @@ class Permission extends Model
     public function userRolePermissions(): BelongsToMany
     {
         return $this->belongsToMany(UserRole::class, 'USER_ROLE_PERMISSION', 'permission_id', 'user_role_id')
-                    ->withPivot('is_granted', 'reason');
+                    ->withPivot('is_granted', 'date');
     }
 
     /**

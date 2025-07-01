@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\Permission;
 use App\Models\AcademicYear;
 use App\Models\UserRole;
+use App\Models\Student;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
@@ -34,12 +35,23 @@ class RoleControllerTest extends TestCase
             Permission::create(['permission_name' => 'user.delete']),
         ]);
 
-        // Create test user with president role
-        $this->user = User::create([
+        // Create test student for user
+        $this->student = Student::create([
+            'student_number' => '2024-ROLE-001',
             'first_name' => 'Test',
             'last_name' => 'President',
+            'middle_initial' => 'A',
             'email' => 'president@test.com',
-            'password' => bcrypt('password123')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        // Create test user with president role
+        $this->user = User::create([
+            'student_number' => '2024-ROLE-001',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
         ]);
 
         $presidentRole = Role::create([
@@ -50,7 +62,7 @@ class RoleControllerTest extends TestCase
 
         // Assign president role to user using UserRole directly
         UserRole::create([
-            'user_id' => $this->user->user_id,
+            'student_number' => $this->user->student_number,
             'role_id' => $presidentRole->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()
@@ -237,23 +249,34 @@ class RoleControllerTest extends TestCase
 
     public function test_it_cannot_delete_role_assigned_to_users()
     {
+        // Create the student first
+        $student = Student::create([
+            'student_number' => '2024-ROLE-002',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'middle_initial' => 'B',
+            'email' => 'roleuser2@example.com',
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
+        ]);
+        // Now create the user
+        $user = User::create([
+            'student_number' => '2024-ROLE-002',
+            'password' => bcrypt('password123'),
+            'status' => 'active'
+        ]);
+
         $role = Role::create([
             'role_name' => 'Assigned Role',
             'description' => 'Role assigned to user',
             'role_priority' => 25
         ]);
 
-        // Create a new user for this test to avoid conflicts
-        $testUser = User::create([
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'testuser@test.com',
-            'password' => bcrypt('password123')
-        ]);
-
         // Assign role to user using UserRole directly
         UserRole::create([
-            'user_id' => $testUser->user_id,
+            'student_number' => $user->student_number,
             'role_id' => $role->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()

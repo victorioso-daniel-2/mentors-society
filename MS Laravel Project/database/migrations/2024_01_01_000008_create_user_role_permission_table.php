@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_role_id')->constrained('user_role', 'user_role_id')->onDelete('cascade');
             $table->foreignId('permission_id')->constrained('permission', 'permission_id')->onDelete('cascade');
             $table->boolean('is_granted')->default(true);
-            $table->string('reason', 255)->nullable();
+            $table->timestamp('date')->useCurrent();
             $table->unique(['user_role_id', 'permission_id']);
         });
     }

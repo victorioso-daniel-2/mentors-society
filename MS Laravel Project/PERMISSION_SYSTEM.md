@@ -267,4 +267,14 @@ USER_ROLE_PERMISSION (user_role_id, permission_id, is_granted, reason)
 - `CheckRole` - Validates user roles
 - `CheckPermissionOrRole` - Flexible permission checking
 
+## Transaction Type & Event Fee Permissions
+- `transaction_type.view`: View transaction types
+- `transaction_type.create`: Create transaction types
+- `transaction_type.update`: Update transaction types
+- `transaction_type.delete`: Delete transaction types
+- `event_fee.manage`: Manage event fees
+
+### Event Fee
+- The 'Event Fee' transaction type is used for payments collected from students for participation in events. It is classified as 'income' and is used for financial and audit reporting.
+
 This permission system provides a robust, scalable foundation for managing access control in the Mentors Society application while maintaining security and auditability. 

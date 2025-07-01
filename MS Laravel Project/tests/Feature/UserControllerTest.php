@@ -43,27 +43,30 @@ class UserControllerTest extends TestCase
             'role_priority' => 1
         ]);
 
-        // Create user
-        $this->user = User::create([
-            'user_id' => 1,
+        // Create student first
+        $this->student = Student::create([
+            'student_number' => '2021-00112-TG-0',
             'first_name' => 'Janella',
             'last_name' => 'Boncodin',
             'middle_initial' => 'A',
             'email' => 'janella.boncodin@example.com',
-            'password' => Hash::make('JanellaAnneBoncodin')
+            'course' => 'BSIT',
+            'year_level' => 'Fourth Year',
+            'section' => 'A',
+            'academic_status' => 'active'
         ]);
 
-        // Create student record
-        $this->student = Student::create([
-            'student_id' => 1,
-            'user_id' => $this->user->user_id,
-            'student_number' => '2021-00112-TG-0'
+        // Create user with matching student_number
+        $this->user = User::create([
+            'student_number' => '2021-00112-TG-0',
+            'password' => Hash::make('JanellaAnneBoncodin'),
+            'status' => 'active'
         ]);
 
         // Create user role
         $this->userRole = UserRole::create([
             'user_role_id' => 1,
-            'user_id' => $this->user->user_id,
+            'student_number' => $this->user->student_number,
             'role_id' => $this->role->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now(),
@@ -76,27 +79,8 @@ class UserControllerTest extends TestCase
             'password' => 'JanellaAnneBoncodin'
         ]);
 
-        // Debug: Check if login was successful
-        if ($loginResponse->status() !== 200) {
-            dd('Login failed in UserControllerTest:', $loginResponse->json());
-        }
-
         $loginData = $loginResponse->json();
-        
-        // Debug: Check if token exists in response
-        if (!isset($loginData['data']['token'])) {
-            dd('No token in login response:', $loginData);
-        }
-
         $this->token = $loginData['data']['token'];
-        
-        // Debug: Check token format
-        if (empty($this->token)) {
-            dd('Token is empty:', $this->token);
-        }
-
-        // Debug: Print token for verification
-        echo "Token generated: " . substr($this->token, 0, 20) . "...\n";
     }
 
     /** @test */
@@ -114,12 +98,12 @@ class UserControllerTest extends TestCase
                         'current_page',
                         'data' => [
                             '*' => [
-                                'id',
+                                'student_number',
                                 'first_name',
                                 'last_name',
                                 'email',
                                 'full_name',
-                                'student_number',
+                                'status',
                                 'roles'
                             ]
                         ]
@@ -172,18 +156,18 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users/' . $this->user->user_id);
+        ])->getJson('/api/users/' . $this->user->student_number);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
                     'success',
                     'data' => [
-                        'id',
+                        'student_number',
                         'first_name',
                         'last_name',
                         'email',
                         'full_name',
-                        'student_number',
+                        'status',
                         'roles'
                     ],
                     'message'
@@ -191,7 +175,7 @@ class UserControllerTest extends TestCase
                 ->assertJson([
                     'success' => true,
                     'data' => [
-                        'id' => $this->user->user_id,
+                        'student_number' => $this->user->student_number,
                         'first_name' => 'Janella',
                         'last_name' => 'Boncodin',
                         'email' => 'janella.boncodin@example.com'
@@ -205,10 +189,13 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users/99999');
+        ])->getJson('/api/users/nonexistent-user');
 
         $response->assertStatus(404)
-                ->assertJson(['success' => false]);
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
     }
 
     /** @test */
@@ -217,24 +204,26 @@ class UserControllerTest extends TestCase
         $updateData = [
             'first_name' => 'Janella Updated',
             'last_name' => 'Boncodin Updated',
-            'email' => 'janella.updated@gmail.com'
+            'email' => 'janella.updated@example.com',
+            'status' => 'inactive'
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, $updateData);
+        ])->putJson('/api/users/' . $this->user->student_number, $updateData);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
                     'success',
                     'data' => [
-                        'id',
+                        'student_number',
                         'first_name',
                         'last_name',
                         'email',
                         'full_name',
-                        'student_number',
+                        'status',
+                        'created_at',
                         'updated_at'
                     ],
                     'message'
@@ -242,9 +231,11 @@ class UserControllerTest extends TestCase
                 ->assertJson([
                     'success' => true,
                     'data' => [
+                        'student_number' => $this->user->student_number,
                         'first_name' => 'Janella Updated',
                         'last_name' => 'Boncodin Updated',
-                        'email' => 'janella.updated@gmail.com'
+                        'email' => 'janella.updated@example.com',
+                        'status' => 'inactive'
                     ]
                 ]);
     }
@@ -259,25 +250,39 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, $updateData);
+        ])->putJson('/api/users/' . $this->user->student_number, $updateData);
 
         $response->assertStatus(200)
-                ->assertJson(['success' => true]);
+                ->assertJson([
+                    'success' => true,
+                    'message' => 'User updated successfully'
+                ]);
     }
 
     /** @test */
     public function it_validates_update_data()
     {
+        $invalidData = [
+            'email' => 'invalid-email',
+            'password' => '123' // too short
+        ];
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->putJson('/api/users/' . $this->user->user_id, [
-            'email' => 'invalid-email'
-        ]);
+        ])->putJson('/api/users/' . $this->user->student_number, $invalidData);
 
-        $response->assertStatus(400)
-                ->assertJson(['success' => false])
-                ->assertJsonStructure(['errors']);
+        $response->assertStatus(422)
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'Validation failed'
+                ])
+                ->assertJsonStructure([
+                    'errors' => [
+                        'email',
+                        'password'
+                    ]
+                ]);
     }
 
     /** @test */
@@ -286,7 +291,7 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users/' . $this->user->user_id . '/roles');
+        ])->getJson('/api/users/' . $this->user->student_number . '/roles');
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
@@ -296,11 +301,9 @@ class UserControllerTest extends TestCase
                             'user_role_id',
                             'role_id',
                             'role_name',
-                            'description',
                             'academic_year_id',
                             'start_date',
-                            'end_date',
-                            'is_active'
+                            'end_date'
                         ]
                     ],
                     'message'
@@ -311,11 +314,11 @@ class UserControllerTest extends TestCase
     /** @test */
     public function it_can_assign_role_to_user()
     {
-        // Create a new role for testing
+        // Create another role
         $newRole = Role::create([
             'role_id' => 2,
-            'role_name' => 'Test Role',
-            'description' => 'Test role for assignment',
+            'role_name' => 'Officer',
+            'description' => 'Officer role',
             'role_priority' => 2
         ]);
 
@@ -323,21 +326,21 @@ class UserControllerTest extends TestCase
             'role_id' => $newRole->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
             'start_date' => now()->format('Y-m-d'),
-            'end_date' => now()->addYear()->format('Y-m-d')
+            'end_date' => null
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', $roleData);
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', $roleData);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
                 ->assertJsonStructure([
                     'success',
                     'data' => [
                         'user_role_id',
+                        'student_number',
                         'role_id',
-                        'role_name',
                         'academic_year_id',
                         'start_date',
                         'end_date'
@@ -347,8 +350,8 @@ class UserControllerTest extends TestCase
                 ->assertJson([
                     'success' => true,
                     'data' => [
-                        'role_id' => $newRole->role_id,
-                        'role_name' => 'Test Role'
+                        'student_number' => $this->user->student_number,
+                        'role_id' => $newRole->role_id
                     ]
                 ]);
     }
@@ -356,18 +359,21 @@ class UserControllerTest extends TestCase
     /** @test */
     public function it_validates_role_assignment_data()
     {
+        $invalidData = [
+            'role_id' => 'invalid',
+            'academic_year_id' => 'invalid'
+        ];
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', [
-            'role_id' => 99999, // Non-existent role
-            'academic_year_id' => $this->academicYear->academic_year_id,
-            'start_date' => now()->format('Y-m-d')
-        ]);
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', $invalidData);
 
-        $response->assertStatus(400)
-                ->assertJson(['success' => false])
-                ->assertJsonStructure(['errors']);
+        $response->assertStatus(422)
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'Validation failed'
+                ]);
     }
 
     /** @test */
@@ -376,34 +382,35 @@ class UserControllerTest extends TestCase
         $roleData = [
             'role_id' => $this->role->role_id,
             'academic_year_id' => $this->academicYear->academic_year_id,
-            'start_date' => now()->format('Y-m-d')
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => null
         ];
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->postJson('/api/users/' . $this->user->user_id . '/roles', $roleData);
+        ])->postJson('/api/users/' . $this->user->student_number . '/roles', $roleData);
 
-        $response->assertStatus(400)
-                ->assertJson(['success' => false])
-                ->assertJsonFragment(['message' => 'User already has this role for the specified academic year']);
+        $response->assertStatus(422)
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'User already has this role for the specified academic year'
+                ]);
     }
 
     /** @test */
     public function it_can_remove_role_from_user()
     {
-        // First, get the user role ID
-        $userRole = UserRole::where('user_id', $this->user->user_id)
-                           ->where('role_id', $this->role->role_id)
-                           ->first();
-
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->deleteJson('/api/users/' . $this->user->user_id . '/roles/' . $userRole->user_role_id);
+        ])->deleteJson('/api/users/' . $this->user->student_number . '/roles/' . $this->userRole->user_role_id);
 
         $response->assertStatus(200)
-                ->assertJson(['success' => true]);
+                ->assertJson([
+                    'success' => true,
+                    'message' => 'Role removed successfully'
+                ]);
     }
 
     /** @test */
@@ -412,10 +419,13 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->deleteJson('/api/users/' . $this->user->user_id . '/roles/99999');
+        ])->deleteJson('/api/users/' . $this->user->student_number . '/roles/999');
 
         $response->assertStatus(404)
-                ->assertJson(['success' => false]);
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'User role not found'
+                ]);
     }
 
     /** @test */
@@ -431,12 +441,12 @@ class UserControllerTest extends TestCase
                     'success',
                     'data' => [
                         '*' => [
-                            'id',
+                            'student_number',
                             'first_name',
                             'last_name',
                             'email',
                             'full_name',
-                            'student_number',
+                            'status',
                             'roles'
                         ]
                     ],
@@ -451,19 +461,20 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users-search?query=Janella&limit=5');
+        ])->getJson('/api/users/search?q=Janella');
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
                     'success',
                     'data' => [
                         '*' => [
-                            'id',
+                            'student_number',
                             'first_name',
                             'last_name',
                             'email',
                             'full_name',
-                            'student_number'
+                            'status',
+                            'roles'
                         ]
                     ],
                     'message'
@@ -477,11 +488,13 @@ class UserControllerTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json'
-        ])->getJson('/api/users-search?query=a');
+        ])->getJson('/api/users/search');
 
-        $response->assertStatus(400)
-                ->assertJson(['success' => false])
-                ->assertJsonStructure(['errors']);
+        $response->assertStatus(422)
+                ->assertJson([
+                    'success' => false,
+                    'message' => 'Search query is required'
+                ]);
     }
 
     /** @test */

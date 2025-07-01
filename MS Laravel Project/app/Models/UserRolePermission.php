@@ -15,7 +15,7 @@ class UserRolePermission extends Model
         'user_role_id',
         'permission_id',
         'is_granted',
-        'reason'
+        'date'
     ];
 
     protected $casts = [
