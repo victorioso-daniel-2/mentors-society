@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Administration - Mentors Society</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <div class="bg-white shadow-lg w-64 flex-shrink-0">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-blue-600">Mentors Society</h1>
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Navigation</span>
+                        <button id="viewToggle" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-user-tie mr-1"></i>Officer
+                        </button>
+                    </div>
+                </div>
+                <div class="px-4 space-y-2">
+                    <a href="dashboard.html" class="nav-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                    </a>
+                    <a href="student-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-users mr-3"></i>Student Management
+                    </a>
+                    <a href="event-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-calendar-alt mr-3"></i>Event Management
+                    </a>
+                    <a href="financial-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-money-bill mr-3"></i>Financial Management
+                    </a>
+                    <a href="inventory-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-boxes mr-3"></i>Inventory Management
+                    </a>
+                    <a href="reports-analytics.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-chart-bar mr-3"></i>Reports & Analytics
+                    </a>
+                    <a href="system-administration.html" class="nav-link officer-only active flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                        <i class="fas fa-cog mr-3"></i>System Administration
+                    </a>
+                </div>
+            </nav>
+        </div>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">System Administration</h1>
+                        <p class="text-sm text-gray-600">Manage roles, permissions, and presidency transfer</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-bell text-xl"></i>
+                        </button>
+                        <div class="relative">
+                            <button class="flex items-center text-gray-600 hover:text-blue-600">
+                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                                    <span class="text-sm font-medium text-blue-600">JS</span>
+                                </div>
+                                <span>John Smith</span>
+                                <i class="fas fa-chevron-down ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 overflow-y-auto p-6 space-y-8">
+                <!-- Roles & Permissions Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Roles & Permissions</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">President</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Highest authority, can manage all settings</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">All permissions</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Class President</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Manages class-level activities</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">20</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Class management, event creation</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Student</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Regular member</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">99</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">View, register, feedback</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Assign Officers Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Assign Officers</h2>
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select User</label>
+                            <select class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option>Maria Johnson</option>
+                                <option>Robert Santos</option>
+                                <option>John Smith</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Assign Role</label>
+                            <select class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option>President</option>
+                                <option>VPI</option>
+                                <option>VpEx</option>
+                                <option>Secretary General</option>
+                                <option>Treasurer</option>
+                                <option>Auditor</option>
+                                <option>Class President</option>
+                                <option>Student</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Assign Role
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Edit User Permissions Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Edit User Permissions</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Maria Johnson</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">President</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">All permissions</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Robert Santos</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">VPI</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">User, student, event, financial, inventory</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Janella Anne</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Student</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">View, register, feedback</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><button class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Presidency Transfer Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Presidency Transfer</h2>
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select New President</label>
+                            <select class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option>Maria Johnson</option>
+                                <option>Robert Santos</option>
+                                <option>John Smith</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Transfer Presidency
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <!-- System Settings Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">System Settings</h2>
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Academic Year</label>
+                            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" value="2024-2025">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Organization Name</label>
+                            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" value="Mentors Society">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="officerContent" class="hidden">
+        <!-- Full system administration content here (existing content) -->
+    </div>
+    <div id="studentContent">
+        <div class="flex items-center justify-center h-full">
+            <div class="bg-white rounded-lg shadow p-8 mt-24">
+                <h2 class="text-2xl font-bold text-red-600 mb-4">Access Denied: Officers Only</h2>
+                <p class="text-gray-700">You do not have permission to view this page.</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    function setViewModeUI(isOfficer) {
+        const officerLinks = document.querySelectorAll('.officer-only');
+        const studentLinks = document.querySelectorAll('.student-only');
+        const viewToggle = document.getElementById('viewToggle');
+        if (isOfficer) {
+            if (viewToggle) {
+                viewToggle.innerHTML = '<i class="fas fa-user-tie mr-1"></i>Officer';
+                viewToggle.className = 'bg-blue-600 text-white px-2 py-1 rounded text-xs';
+            }
+            officerLinks.forEach(link => link.classList.remove('hidden'));
+            studentLinks.forEach(link => link.classList.add('hidden'));
+        } else {
+            if (viewToggle) {
+                viewToggle.innerHTML = '<i class="fas fa-user-graduate mr-1"></i>Student';
+                viewToggle.className = 'bg-green-600 text-white px-2 py-1 rounded text-xs';
+            }
+            officerLinks.forEach(link => link.classList.add('hidden'));
+            studentLinks.forEach(link => link.classList.remove('hidden'));
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let isOfficerView = localStorage.getItem('viewMode') === 'officer';
+        setViewModeUI(isOfficerView);
+        // Remove officer/student content switching for this page
+        const viewToggle = document.getElementById('viewToggle');
+        if (viewToggle) {
+            viewToggle.addEventListener('click', function() {
+                isOfficerView = !isOfficerView;
+                localStorage.setItem('viewMode', isOfficerView ? 'officer' : 'student');
+                window.location.href = 'dashboard.html';
+            });
+        }
+    });
+    </script>
+</body>
+</html>

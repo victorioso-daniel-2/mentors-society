@@ -1,117 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mentors Society</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md flex flex-col">
-      <div id="sidebarBrand" class="p-6 font-bold text-xl border-b">Organization Management</div>
-      <div class="p-4 border-b">
-        <label for="viewMode" class="font-semibold">View Mode:</label>
-        <select id="viewMode" class="ml-2 border rounded px-2 py-1">
-          <option value="org">Organization Management</option>
-          <option value="student">Personal/Student</option>
-        </select>
-      </div>
-      <nav class="flex-1 p-4">
-        <ul id="orgLinks" class="space-y-2">
-          <li><a href="dashboard.html" class="block px-4 py-2 rounded bg-gray-200 font-medium text-gray-800">Dashboard</a></li>
-          <li><a href="members.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Members</a></li>
-          <li><a href="events.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Events</a></li>
-          <li><a href="finance-reports.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Finances</a></li>
-          <li><a href="inventory-reports.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Inventory</a></li>
-          <li><a href="reports.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Reports</a></li>
-          <li><a href="settings.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Settings</a></li>
-        </ul>
-        <ul id="studentLinks" class="space-y-2 hidden">
-          <li><a href="dashboard.html" class="block px-4 py-2 rounded bg-gray-200 font-medium text-gray-800">Dashboard</a></li>
-          <li><a href="events.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Events</a></li>
-          <li><a href="reports.html" class="block px-4 py-2 rounded hover:bg-gray-200 font-medium text-gray-800">Reports</a></li>
-        </ul>
-      </nav>
-      <div class="p-4 border-t">
-        <a href="profile.html" class="block px-4 py-2 rounded hover:bg-gray-200 text-gray-700">Profile</a>
-        <a href="#" class="block px-4 py-2 rounded hover:bg-gray-200 text-red-600 mt-2">Logout</a>
-      </div>
-    </aside>
-    <!-- Main Content -->
-    <main class="flex-1 p-8">
-      <div id="orgMain">
-        <h1 class="text-2xl font-bold mb-4">Dashboard (Organization Management)</h1>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="bg-white p-6 rounded shadow">
-            <h2 class="text-lg font-semibold mb-2">Upcoming Events</h2>
-            <p class="text-gray-600">No upcoming events.</p>
-          </div>
-          <div class="bg-white p-6 rounded shadow">
-            <h2 class="text-lg font-semibold mb-2">Finance Summary</h2>
-            <p class="text-gray-600">Total Balance: ₱0.00</p>
-          </div>
-          <div class="bg-white p-6 rounded shadow">
-            <h2 class="text-lg font-semibold mb-2">Inventory Status</h2>
-            <p class="text-gray-600">All items accounted for.</p>
-          </div>
+<body class="bg-gray-50">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <div class="bg-white shadow-lg w-64 flex-shrink-0">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-blue-600">Mentors Society</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <div class="px-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Navigation</span>
+                        <button id="viewToggle" class="bg-green-600 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-user-graduate mr-1"></i>Student
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="px-4 space-y-2">
+                    <a href="#" class="nav-link active flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                    </a>
+                    <a href="student-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-users mr-3"></i>Student Management
+                    </a>
+                    <a href="event-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-calendar-alt mr-3"></i>Event Management
+                    </a>
+                    <a href="financial-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-money-bill mr-3"></i>Financial Management
+                    </a>
+                    <a href="inventory-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-boxes mr-3"></i>Inventory Management
+                    </a>
+                    <a href="reports-analytics.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-chart-bar mr-3"></i>Reports & Analytics
+                    </a>
+                    <a href="system-administration.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-cog mr-3"></i>System Administration
+                    </a>
+                </div>
+            </nav>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <button class="bg-blue-600 text-white px-4 py-3 rounded shadow hover:bg-blue-700 font-semibold">+ Add Event</button>
-          <button class="bg-green-600 text-white px-4 py-3 rounded shadow hover:bg-green-700 font-semibold">+ Add Transaction</button>
-          <button class="bg-yellow-600 text-white px-4 py-3 rounded shadow hover:bg-yellow-700 font-semibold">+ Add Inventory Item</button>
-        </div>
-        <div class="bg-white p-6 rounded shadow">
-          <h2 class="text-lg font-semibold mb-2">Announcements</h2>
-          <p class="text-gray-600">Welcome, President! You have full access to manage the organization.</p>
-        </div>
-      </div>
-      <div id="studentMain" class="hidden">
-        <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
-        <div class="bg-white p-6 rounded shadow">
-          <h2 class="text-lg font-semibold mb-2">Announcements</h2>
-          <p class="text-gray-600">Welcome to the Student Organization Management System!</p>
-        </div>
-      </div>
-    </main>
-  </div>
-  <script>
-    const viewMode = document.getElementById('viewMode');
-    const orgLinks = document.getElementById('orgLinks');
-    const studentLinks = document.getElementById('studentLinks');
-    const orgMain = document.getElementById('orgMain');
-    const studentMain = document.getElementById('studentMain');
-    const sidebarBrand = document.getElementById('sidebarBrand');
 
-    // Helper to set UI based on mode
-    function setViewMode(mode) {
-      if (mode === 'org') {
-        orgLinks.classList.remove('hidden');
-        orgMain.classList.remove('hidden');
-        studentLinks.classList.add('hidden');
-        studentMain.classList.add('hidden');
-        sidebarBrand.textContent = 'Organization Management';
-      } else {
-        orgLinks.classList.add('hidden');
-        orgMain.classList.add('hidden');
-        studentLinks.classList.remove('hidden');
-        studentMain.classList.remove('hidden');
-        sidebarBrand.textContent = 'My Student View';
-      }
-      viewMode.value = mode;
-      localStorage.setItem('viewMode', mode);
-    }
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                        <p class="text-sm text-gray-600">Welcome back! Here's an overview of your activities.</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-bell text-xl"></i>
+                        </button>
+                        <div class="relative">
+                            <button class="flex items-center text-gray-600 hover:text-blue-600">
+                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                                    <span class="text-sm font-medium text-blue-600">JA</span>
+                                </div>
+                                <span>Janella Anne</span>
+                                <span class="ml-2 text-xs text-gray-400">2021-00112-TG-0</span>
+                                <i class="fas fa-chevron-down ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-    // On page load, set mode from localStorage or default to org
-    document.addEventListener('DOMContentLoaded', function() {
-      const savedMode = localStorage.getItem('viewMode') || 'org';
-      setViewMode(savedMode);
-    });
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Student View -->
+                <div id="studentView" class="space-y-6">
+                    <!-- Student Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6 flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-full mr-4">
+                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-sm">Events Registered</div>
+                                <div class="text-2xl font-bold">5</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 flex items-center">
+                            <div class="bg-green-100 p-3 rounded-full mr-4">
+                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a5 5 0 00-10 0v2a5 5 0 0010 0z"/></svg>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-sm">Events Attended</div>
+                                <div class="text-2xl font-bold">3</div>
+                            </div>
+                        </div>
+                    </div>
 
-    viewMode.addEventListener('change', function() {
-      setViewMode(this.value);
-    });
-  </script>
+                    <!-- Student Quick Actions -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-calendar-plus text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Register for Event</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-user-edit text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Edit Profile</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">View Reports</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-question-circle text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Get Help</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Student Recent Activities & Upcoming Events -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Recent Activities -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-check text-green-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Attended Math Workshop</p>
+                                        <p class="text-sm text-gray-500">Completed 2-hour workshop on advanced mathematics</p>
+                                        <p class="text-xs text-gray-400">2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-calendar text-blue-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Registered for English Debate</p>
+                                        <p class="text-sm text-gray-500">Successfully registered for upcoming debate competition</p>
+                                        <p class="text-xs text-gray-400">1 day ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-star text-purple-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Earned Achievement Points</p>
+                                        <p class="text-sm text-gray-500">Received 15 points for active participation</p>
+                                        <p class="text-xs text-gray-400">3 days ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Events -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Upcoming Events</h2>
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-blue-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">English Debate</h3>
+                                    <p class="text-sm text-gray-500">Dec 18, 2024 • 3:00 PM</p>
+                                    <p class="text-xs text-gray-400">Auditorium • You are registered</p>
+                                </div>
+                                <div class="border-l-4 border-green-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">Leadership Training</h3>
+                                    <p class="text-sm text-gray-500">Dec 20, 2024 • 9:00 AM</p>
+                                    <p class="text-xs text-gray-400">Conference Room • Registration open</p>
+                                </div>
+                                <div class="border-l-4 border-orange-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">Science Fair</h3>
+                                    <p class="text-sm text-gray-500">Dec 25, 2024 • 10:00 AM</p>
+                                    <p class="text-xs text-gray-400">Gymnasium • Registration open</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Officer View -->
+                <div id="officerView" class="space-y-6 hidden">
+                    <!-- Officer Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-users text-2xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Total Students</p>
+                                    <p class="text-2xl font-bold text-gray-900">450</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fas fa-calendar-alt text-2xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Active Events</p>
+                                    <p class="text-2xl font-bold text-gray-900">8</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                                    <i class="fas fa-tasks text-2xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Pending Tasks</p>
+                                    <p class="text-2xl font-bold text-gray-900">12</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                    <i class="fas fa-peso-sign text-2xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Total Budget</p>
+                                    <p class="text-2xl font-bold text-gray-900">₱25,000</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Officer Quick Actions -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-plus text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Add Student</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-calendar-plus text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Create Event</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-money-bill text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Record Transaction</span>
+                            </button>
+                            <button class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-tasks text-blue-600 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Assign Task</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Officer Recent Activities & Upcoming Events -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Recent Activities -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h2>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user-plus text-green-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">New student registered</p>
+                                        <p class="text-sm text-gray-500">Maria Santos joined BSED Math</p>
+                                        <p class="text-xs text-gray-400">2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-calendar text-blue-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Event created</p>
+                                        <p class="text-sm text-gray-500">Math Workshop scheduled for next week</p>
+                                        <p class="text-xs text-gray-400">4 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-money-bill text-purple-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Transaction recorded</p>
+                                        <p class="text-sm text-gray-500">₱5,000 received from sponsor</p>
+                                        <p class="text-xs text-gray-400">6 hours ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Events -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Upcoming Events</h2>
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-blue-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">Math Workshop</h3>
+                                    <p class="text-sm text-gray-500">Dec 15, 2024 • 2:00 PM</p>
+                                    <p class="text-xs text-gray-400">Room 301 • 45 registered</p>
+                                </div>
+                                <div class="border-l-4 border-green-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">English Debate</h3>
+                                    <p class="text-sm text-gray-500">Dec 18, 2024 • 3:00 PM</p>
+                                    <p class="text-xs text-gray-400">Auditorium • 32 registered</p>
+                                </div>
+                                <div class="border-l-4 border-orange-500 pl-4">
+                                    <h3 class="text-sm font-medium text-gray-900">Leadership Training</h3>
+                                    <p class="text-sm text-gray-500">Dec 20, 2024 • 9:00 AM</p>
+                                    <p class="text-xs text-gray-400">Conference Room • 28 registered</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function setViewModeUI(isOfficer) {
+            const officerLinks = document.querySelectorAll('.officer-only');
+            const studentLinks = document.querySelectorAll('.student-only');
+            const viewToggle = document.getElementById('viewToggle');
+            if (isOfficer) {
+                if (viewToggle) {
+                    viewToggle.innerHTML = '<i class="fas fa-user-tie mr-1"></i>Officer';
+                    viewToggle.className = 'bg-blue-600 text-white px-2 py-1 rounded text-xs';
+                }
+                officerLinks.forEach(link => link.classList.remove('hidden'));
+                studentLinks.forEach(link => link.classList.add('hidden'));
+            } else {
+                if (viewToggle) {
+                    viewToggle.innerHTML = '<i class="fas fa-user-graduate mr-1"></i>Student';
+                    viewToggle.className = 'bg-green-600 text-white px-2 py-1 rounded text-xs';
+                }
+                officerLinks.forEach(link => link.classList.add('hidden'));
+                studentLinks.forEach(link => link.classList.remove('hidden'));
+                // Set class tab label dynamically
+                const classTab = document.getElementById('classTab');
+                if (classTab) {
+                    const className = localStorage.getItem('studentClassName') || 'Class View';
+                    classTab.innerHTML = '<i class="fas fa-users mr-3"></i>' + className;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let isOfficerView = localStorage.getItem('viewMode') === 'officer';
+            setViewModeUI(isOfficerView);
+            // Officer/student main content switching
+            const officerSection = document.getElementById('officerView');
+            const studentSection = document.getElementById('studentView');
+            if (isOfficerView) {
+                if (officerSection) officerSection.classList.remove('hidden');
+                if (studentSection) studentSection.classList.add('hidden');
+            } else {
+                if (officerSection) officerSection.classList.add('hidden');
+                if (studentSection) studentSection.classList.remove('hidden');
+            }
+            const viewToggle = document.getElementById('viewToggle');
+            if (viewToggle) {
+                viewToggle.addEventListener('click', function() {
+                    isOfficerView = !isOfficerView;
+                    localStorage.setItem('viewMode', isOfficerView ? 'officer' : 'student');
+                    window.location.href = 'dashboard.html';
+                });
+            }
+        });
+    </script>
 </body>
-</html> 
+</html>
