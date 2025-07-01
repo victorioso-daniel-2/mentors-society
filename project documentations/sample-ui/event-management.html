@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Mentors Society</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <div class="bg-white shadow-lg w-64 flex-shrink-0">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-blue-600">Mentors Society</h1>
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Navigation</span>
+                        <button id="viewToggle" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                            <i class="fas fa-user-tie mr-1"></i>Officer
+                        </button>
+                    </div>
+                </div>
+                <div class="px-4 space-y-2">
+                    <a href="dashboard.html" class="nav-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                    </a>
+                    <a href="student-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-users mr-3"></i>Student Management
+                    </a>
+                    <a href="event-management.html" class="nav-link officer-only active flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                        <i class="fas fa-calendar-alt mr-3"></i>Event Management
+                    </a>
+                    <a href="financial-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-money-bill mr-3"></i>Financial Management
+                    </a>
+                    <a href="inventory-management.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-boxes mr-3"></i>Inventory Management
+                    </a>
+                    <a href="reports-analytics.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-chart-bar mr-3"></i>Reports & Analytics
+                    </a>
+                    <a href="system-administration.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                        <i class="fas fa-cog mr-3"></i>System Administration
+                    </a>
+                </div>
+            </nav>
+        </div>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Events</h1>
+                        <p class="text-sm text-gray-600">Browse all events, register for events, and evaluate events you attended.</p>
+                    </div>
+                </div>
+            </header>
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Officer View: Event Management -->
+                <div id="officerEventManagement" class="hidden space-y-8">
+                    <!-- Create Event Form -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4">Create New Event</h2>
+                        <form class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <input type="text" placeholder="Event Name" class="border rounded px-3 py-2" />
+                            <input type="date" class="border rounded px-3 py-2" />
+                            <input type="time" class="border rounded px-3 py-2" />
+                            <input type="text" placeholder="Location" class="border rounded px-3 py-2 md:col-span-3" />
+                            <textarea placeholder="Description" class="border rounded px-3 py-2 md:col-span-3"></textarea>
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded col-span-1 md:col-span-3">Create Event</button>
+                        </form>
+                    </div>
+                    <!-- Event List with Edit/Delete -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4">Manage Events</h2>
+                        <table class="min-w-full divide-y divide-gray-200 mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">2024-07-10</td>
+                                    <td class="px-4 py-2">Auditorium</td>
+                                    <td class="px-4 py-2 space-x-2">
+                                        <button class="bg-yellow-500 text-white px-2 py-1 rounded"><i class="fas fa-edit"></i></button>
+                                        <button class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">Team Building</td>
+                                    <td class="px-4 py-2">2024-08-05</td>
+                                    <td class="px-4 py-2">Conference Room</td>
+                                    <td class="px-4 py-2 space-x-2">
+                                        <button class="bg-yellow-500 text-white px-2 py-1 rounded"><i class="fas fa-edit"></i></button>
+                                        <button class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Manage Registrations -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4">Manage Event Registrations</h2>
+                        <table class="min-w-full divide-y divide-gray-200 mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">Janella Anne</td>
+                                    <td class="px-4 py-2 text-green-600">Registered</td>
+                                    <td class="px-4 py-2"><button class="bg-red-500 text-white px-2 py-1 rounded">Remove</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">Team Building</td>
+                                    <td class="px-4 py-2">Student 2</td>
+                                    <td class="px-4 py-2 text-yellow-600">Pending</td>
+                                    <td class="px-4 py-2"><button class="bg-green-500 text-white px-2 py-1 rounded">Approve</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Manage Participants -->
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4">Manage Event Participants</h2>
+                        <table class="min-w-full divide-y divide-gray-200 mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Participant</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Attendance</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">Janella Anne</td>
+                                    <td class="px-4 py-2 text-green-600">Present</td>
+                                    <td class="px-4 py-2"><button class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">Team Building</td>
+                                    <td class="px-4 py-2">Student 2</td>
+                                    <td class="px-4 py-2 text-red-600">Absent</td>
+                                    <td class="px-4 py-2"><button class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- View Event Evaluations -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold mb-4">Event Evaluations</h2>
+                        <table class="min-w-full divide-y divide-gray-200 mb-4">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">Janella Anne</td>
+                                    <td class="px-4 py-2">5</td>
+                                    <td class="px-4 py-2">Very informative!</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">Team Building</td>
+                                    <td class="px-4 py-2">Student 2</td>
+                                    <td class="px-4 py-2">4</td>
+                                    <td class="px-4 py-2">Fun and engaging.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Student View: Register/Evaluate Events -->
+                <div id="studentEventView">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-2">Available Events</h2>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">2024-07-10</td>
+                                    <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Register</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">Team Building</td>
+                                    <td class="px-4 py-2">2024-08-05</td>
+                                    <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Register</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold mb-2">Evaluate Attended Events</h2>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Evaluation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-4 py-2">Leadership Seminar</td>
+                                    <td class="px-4 py-2">2024-07-10</td>
+                                    <td class="px-4 py-2"><button class="bg-green-500 text-white px-3 py-1 rounded">Evaluate</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script>
+    function setViewModeUI(isOfficer) {
+        const officerLinks = document.querySelectorAll('.officer-only');
+        const studentLinks = document.querySelectorAll('.student-only');
+        const viewToggle = document.getElementById('viewToggle');
+        if (isOfficer) {
+            if (viewToggle) {
+                viewToggle.innerHTML = '<i class="fas fa-user-tie mr-1"></i>Officer';
+                viewToggle.className = 'bg-blue-600 text-white px-2 py-1 rounded text-xs';
+            }
+            officerLinks.forEach(link => link.classList.remove('hidden'));
+            studentLinks.forEach(link => link.classList.add('hidden'));
+        } else {
+            if (viewToggle) {
+                viewToggle.innerHTML = '<i class="fas fa-user-graduate mr-1"></i>Student';
+                viewToggle.className = 'bg-green-600 text-white px-2 py-1 rounded text-xs';
+            }
+            officerLinks.forEach(link => link.classList.add('hidden'));
+            studentLinks.forEach(link => link.classList.remove('hidden'));
+        }
+    }
+
+    function setEventManagementView(isOfficer) {
+        const officerSection = document.getElementById('officerEventManagement');
+        const studentSection = document.getElementById('studentEventView');
+        if (isOfficer) {
+            officerSection.classList.remove('hidden');
+            studentSection.classList.add('hidden');
+        } else {
+            officerSection.classList.add('hidden');
+            studentSection.classList.remove('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Always check localStorage for view mode
+        let isOfficerView = localStorage.getItem('viewMode') === 'officer';
+        setViewModeUI(isOfficerView);
+        setEventManagementView(isOfficerView);
+        // Fallback: if officer section is missing, show student section
+        const officerSection = document.getElementById('officerEventManagement');
+        const studentSection = document.getElementById('studentEventView');
+        if (isOfficerView && (!officerSection || officerSection.classList.contains('hidden'))) {
+            if (studentSection) {
+                studentSection.classList.remove('hidden');
+            }
+        }
+        const viewToggle = document.getElementById('viewToggle');
+        if (viewToggle) {
+            viewToggle.addEventListener('click', function() {
+                isOfficerView = !isOfficerView;
+                localStorage.setItem('viewMode', isOfficerView ? 'officer' : 'student');
+                window.location.href = 'dashboard.html';
+            });
+        }
+    });
+    </script>
+</body>
+</html>

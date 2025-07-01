@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events - Mentors Society</title>
+    <title>MS Inventory - Mentors Society</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -33,13 +33,13 @@
                     <a href="class-view.html" class="nav-link student-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md" id="classTab">
                         <i class="fas fa-users mr-3"></i>Class View
                     </a>
-                    <a href="events.html" class="nav-link active flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
+                    <a href="events.html" class="nav-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
                         <i class="fas fa-calendar-alt mr-3"></i>Events
                     </a>
                     <a href="balance.html" class="nav-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
                         <i class="fas fa-money-bill mr-3"></i>Balance
                     </a>
-                    <a href="ms-inventory.html" class="nav-link flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
+                    <a href="ms-inventory.html" class="nav-link active flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">
                         <i class="fas fa-boxes mr-3"></i>MS Inventory
                     </a>
                     <a href="reports-analytics.html" class="nav-link officer-only flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md">
@@ -56,51 +56,51 @@
             <header class="bg-white shadow-sm border-b border-gray-200">
                 <div class="flex items-center justify-between px-6 py-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Events</h1>
-                        <p class="text-sm text-gray-600">Browse all events, register for events, and evaluate events you attended.</p>
+                        <h1 class="text-2xl font-bold text-gray-900">MS Inventory</h1>
+                        <p class="text-sm text-gray-600">View the latest organization inventory. You can request to borrow or return items.</p>
                     </div>
                 </div>
             </header>
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-6 space-y-8">
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-lg font-semibold mb-2">Available Events</h2>
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <h2 class="text-lg font-semibold mb-2">Available Items</h2>
+                    <table class="min-w-full divide-y divide-gray-200 mb-4">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-4 py-2">Leadership Seminar</td>
-                                <td class="px-4 py-2">2024-07-10</td>
-                                <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Register</button></td>
+                                <td class="px-4 py-2">Projector</td>
+                                <td class="px-4 py-2">2</td>
+                                <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Request</button></td>
                             </tr>
                             <tr>
-                                <td class="px-4 py-2">Team Building</td>
-                                <td class="px-4 py-2">2024-08-05</td>
-                                <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Register</button></td>
+                                <td class="px-4 py-2">Speaker</td>
+                                <td class="px-4 py-2">5</td>
+                                <td class="px-4 py-2"><button class="bg-blue-500 text-white px-3 py-1 rounded">Request</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-lg font-semibold mb-2">Evaluate Attended Events</h2>
+                    <h2 class="text-lg font-semibold mb-2">Return Borrowed Items</h2>
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Evaluation</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Borrowed Date</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-4 py-2">Leadership Seminar</td>
-                                <td class="px-4 py-2">2024-07-10</td>
-                                <td class="px-4 py-2"><button class="bg-green-500 text-white px-3 py-1 rounded">Evaluate</button></td>
+                                <td class="px-4 py-2">Projector</td>
+                                <td class="px-4 py-2">2024-06-01</td>
+                                <td class="px-4 py-2"><button class="bg-green-500 text-white px-3 py-1 rounded">Return</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -139,7 +139,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         let isOfficerView = localStorage.getItem('viewMode') === 'officer';
         setViewModeUI(isOfficerView);
-
+        // Fallback: if officer section is missing, show student section
+        // (No officer/student main section split here, but keep logic for consistency)
         const viewToggle = document.getElementById('viewToggle');
         if (viewToggle) {
             viewToggle.addEventListener('click', function() {
