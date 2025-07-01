@@ -6,6 +6,11 @@ The Mentors Society API provides authentication and user management endpoints fo
 
 **Base URL**: `http://localhost:8000/api` (or your domain)
 
+**Important**: This API uses a new schema where:
+- Personal information (name, email, etc.) is stored in the `student` table
+- Authentication information (password, status) is stored in the `user` table
+- `student_number` is the primary key linking both tables
+
 ---
 
 ## 🎨 **Frontend Integration Notes (Vue 3 + Tailwind)**
@@ -99,15 +104,15 @@ Authenticate user with student number and password.
     "message": "Login successful",
     "data": {
         "user": {
-            "id": 291,
+            "student_number": "2021-00112-TG-0",
             "first_name": "Janella",
             "last_name": "Boncodin",
-            "email": "bjanellaanne@gmail.com",
-            "student_number": "2021-00112-TG-0"
+            "email": "janella.boncodin@example.com",
+            "status": "active"
         },
         "roles": [
             {
-                "role_id": 6,
+                "role_id": 1,
                 "role_name": "Student",
                 "academic_year_id": 1
             }
@@ -182,7 +187,7 @@ Request password reset email.
 **Request Body**:
 ```json
 {
-    "email": "bjanellaanne@gmail.com"
+    "email": "janella.boncodin@example.com"
 }
 ```
 
@@ -205,7 +210,7 @@ Reset password using reset token.
 ```json
 {
     "token": "reset_token_here",
-    "email": "bjanellaanne@gmail.com",
+    "email": "janella.boncodin@example.com",
     "password": "newpassword123",
     "password_confirmation": "newpassword123"
 }
@@ -243,11 +248,11 @@ Authorization: Bearer 1|712b9f1c207a86b56ab8a98a2638e291d1ca8de8986fa3aa3ffade25
     "success": true,
     "data": {
         "user": {
-            "id": 291,
+            "student_number": "2021-00112-TG-0",
             "first_name": "Janella",
             "last_name": "Boncodin",
-            "email": "bjanellaanne@gmail.com",
-            "student_number": "2021-00112-TG-0"
+            "email": "janella.boncodin@example.com",
+            "status": "active"
         }
     }
 }
@@ -335,33 +340,52 @@ Get all users with optional filtering.
 **Endpoint**: `GET /api/users`
 
 **Query Parameters**:
-- `search` (optional): Search by name or email
+- `search` (optional): Search by name, email, or student number
 - `role` (optional): Filter by role name
 - `active` (optional): Filter by active status
+- `academic_year_id` (optional): Filter by academic year
+- `sort_by` (optional): Sort by field (default: last_name)
+- `sort_order` (optional): Sort order (asc/desc, default: asc)
+- `per_page` (optional): Results per page (default: 15)
 
 **Response** (200 OK):
 ```json
 {
     "success": true,
     "data": {
+        "current_page": 1,
         "data": [
             {
-                "id": 1,
-                "first_name": "John",
-                "last_name": "Doe",
-                "email": "john@example.com",
-                "full_name": "John Doe",
-                "student_number": "2021-0001-TG-0",
+                "student_number": "2021-00112-TG-0",
+                "first_name": "Janella",
+                "last_name": "Boncodin",
+                "middle_initial": "A",
+                "email": "janella.boncodin@example.com",
+                "full_name": "Janella Boncodin",
+                "status": "active",
                 "roles": [
                     {
                         "role_id": 1,
                         "role_name": "Student",
-                        "academic_year_id": 1
+                        "academic_year_id": 1,
+                        "start_date": "2024-06-01T00:00:00.000000Z",
+                        "end_date": null,
+                        "is_active": true
                     }
-                ]
+                ],
+                "created_at": "2024-06-01T00:00:00.000000Z",
+                "updated_at": "2024-06-01T00:00:00.000000Z"
             }
         ],
-        "current_page": 1,
+        "first_page_url": "http://localhost:8000/api/users?page=1",
+        "from": 1,
+        "last_page": 1,
+        "last_page_url": "http://localhost:8000/api/users?page=1",
+        "next_page_url": null,
+        "path": "http://localhost:8000/api/users",
+        "per_page": 15,
+        "prev_page_url": null,
+        "to": 1,
         "total": 1
     },
     "message": "Users retrieved successfully"
@@ -369,40 +393,59 @@ Get all users with optional filtering.
 ```
 
 ### 8. **Get User**
-Get specific user by ID.
+Get specific user by student number.
 
-**Endpoint**: `GET /api/users/{id}`
+**Endpoint**: `GET /api/users/{student_number}`
 
 **Response** (200 OK):
 ```json
 {
     "success": true,
     "data": {
-        "id": 1,
-        "first_name": "John",
-        "last_name": "Doe",
-        "email": "john@example.com",
-        "full_name": "John Doe",
-        "student_number": "2021-0001-TG-0",
-        "roles": [...]
+        "student_number": "2021-00112-TG-0",
+        "first_name": "Janella",
+        "last_name": "Boncodin",
+        "middle_initial": "A",
+        "email": "janella.boncodin@example.com",
+        "full_name": "Janella Boncodin",
+        "status": "active",
+        "roles": [
+            {
+                "role_id": 1,
+                "role_name": "Student",
+                "description": "Student role",
+                "academic_year_id": 1,
+                "start_date": "2024-06-01T00:00:00.000000Z",
+                "end_date": null,
+                "is_active": true,
+                "permissions": [
+                    {
+                        "permission_id": 1,
+                        "permission_name": "user.view",
+                        "description": "View users"
+                    }
+                ]
+            }
+        ],
+        "created_at": "2024-06-01T00:00:00.000000Z",
+        "updated_at": "2024-06-01T00:00:00.000000Z"
     },
     "message": "User retrieved successfully"
 }
 ```
 
 ### 9. **Create User**
-Create a new user.
+Create a new user (requires existing student record).
 
 **Endpoint**: `POST /api/users`
 
 **Request Body**:
 ```json
 {
-    "first_name": "Jane",
-    "last_name": "Smith",
-    "email": "jane@example.com",
+    "student_number": "2021-00001-TG-0",
     "password": "password123",
-    "password_confirmation": "password123"
+    "password_confirmation": "password123",
+    "status": "active"
 }
 ```
 
@@ -411,27 +454,27 @@ Create a new user.
 {
     "success": true,
     "data": {
-        "id": 2,
-        "first_name": "Jane",
-        "last_name": "Smith",
-        "email": "jane@example.com",
-        "full_name": "Jane Smith"
+        "student_number": "2021-00001-TG-0",
+        "status": "active",
+        "created_at": "2024-06-01T00:00:00.000000Z",
+        "updated_at": "2024-06-01T00:00:00.000000Z"
     },
     "message": "User created successfully"
 }
 ```
 
 ### 10. **Update User**
-Update user information.
+Update user information (updates both user and student records).
 
-**Endpoint**: `PUT /api/users/{id}`
+**Endpoint**: `PUT /api/users/{student_number}`
 
 **Request Body**:
 ```json
 {
-    "first_name": "Jane",
-    "last_name": "Johnson",
-    "email": "jane.johnson@example.com"
+    "first_name": "Janella Updated",
+    "last_name": "Boncodin Updated",
+    "email": "janella.updated@example.com",
+    "status": "inactive"
 }
 ```
 
@@ -440,11 +483,15 @@ Update user information.
 {
     "success": true,
     "data": {
-        "id": 2,
-        "first_name": "Jane",
-        "last_name": "Johnson",
-        "email": "jane.johnson@example.com",
-        "full_name": "Jane Johnson"
+        "student_number": "2021-00112-TG-0",
+        "first_name": "Janella Updated",
+        "last_name": "Boncodin Updated",
+        "middle_initial": "A",
+        "email": "janella.updated@example.com",
+        "full_name": "Janella Updated Boncodin Updated",
+        "status": "inactive",
+        "created_at": "2024-06-01T00:00:00.000000Z",
+        "updated_at": "2024-06-01T00:00:00.000000Z"
     },
     "message": "User updated successfully"
 }
@@ -453,7 +500,7 @@ Update user information.
 ### 11. **Delete User**
 Delete a user.
 
-**Endpoint**: `DELETE /api/users/{id}`
+**Endpoint**: `DELETE /api/users/{student_number}`
 
 **Response** (200 OK):
 ```json
@@ -466,7 +513,7 @@ Delete a user.
 ### 12. **Get User Roles**
 Get all roles assigned to a user.
 
-**Endpoint**: `GET /api/users/{id}/roles`
+**Endpoint**: `GET /api/users/{student_number}/roles`
 
 **Response** (200 OK):
 ```json
@@ -491,7 +538,7 @@ Get all roles assigned to a user.
 ### 13. **Assign Role to User**
 Assign a role to a user.
 
-**Endpoint**: `POST /api/users/{id}/roles`
+**Endpoint**: `POST /api/users/{student_number}/roles`
 
 **Request Body**:
 ```json
@@ -503,17 +550,18 @@ Assign a role to a user.
 }
 ```
 
-**Response** (200 OK):
+**Response** (201 Created):
 ```json
 {
     "success": true,
     "data": {
         "user_role_id": 2,
+        "student_number": "2021-00112-TG-0",
         "role_id": 1,
         "role_name": "Student",
         "academic_year_id": 1,
-        "start_date": "2024-06-01",
-        "end_date": "2025-05-31"
+        "start_date": "2024-06-01T00:00:00.000000Z",
+        "end_date": "2025-05-31T00:00:00.000000Z"
     },
     "message": "Role assigned successfully"
 }
@@ -522,7 +570,7 @@ Assign a role to a user.
 ### 14. **Remove Role from User**
 Remove a role from a user.
 
-**Endpoint**: `DELETE /api/users/{id}/roles/{roleId}`
+**Endpoint**: `DELETE /api/users/{student_number}/roles/{roleId}`
 
 **Response** (200 OK):
 ```json
@@ -543,26 +591,36 @@ Get all users with a specific role.
     "success": true,
     "data": [
         {
-            "id": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john@example.com",
-            "full_name": "John Doe",
-            "student_number": "2021-0001-TG-0",
-            "roles": [...]
+            "student_number": "2021-00112-TG-0",
+            "first_name": "Janella",
+            "last_name": "Boncodin",
+            "middle_initial": "A",
+            "email": "janella.boncodin@example.com",
+            "full_name": "Janella Boncodin",
+            "status": "active",
+            "roles": [
+                {
+                    "role_id": 1,
+                    "role_name": "Student",
+                    "academic_year_id": 1,
+                    "start_date": "2024-06-01T00:00:00.000000Z",
+                    "end_date": null,
+                    "is_active": true
+                }
+            ]
         }
     ],
-    "message": "Users retrieved successfully"
+    "message": "Users with role 'Student' retrieved successfully"
 }
 ```
 
 ### 16. **Search Users**
-Search users by name or email.
+Search users by name, email, or student number.
 
-**Endpoint**: `GET /api/users-search`
+**Endpoint**: `GET /api/users/search`
 
 **Query Parameters**:
-- `query` (required): Search term (minimum 2 characters)
+- `q` (required): Search term (minimum 2 characters)
 - `limit` (optional): Number of results (default: 10)
 
 **Response** (200 OK):
@@ -571,15 +629,37 @@ Search users by name or email.
     "success": true,
     "data": [
         {
-            "id": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john@example.com",
-            "full_name": "John Doe",
-            "student_number": "2021-0001-TG-0"
+            "student_number": "2021-00112-TG-0",
+            "first_name": "Janella",
+            "last_name": "Boncodin",
+            "middle_initial": "A",
+            "email": "janella.boncodin@example.com",
+            "full_name": "Janella Boncodin",
+            "status": "active",
+            "roles": [
+                {
+                    "role_id": 1,
+                    "role_name": "Student",
+                    "academic_year_id": 1,
+                    "start_date": "2024-06-01T00:00:00.000000Z",
+                    "end_date": null,
+                    "is_active": true
+                }
+            ]
         }
     ],
-    "message": "Users found successfully"
+    "message": "Search completed successfully"
+}
+```
+
+**Error Response** (422 Unprocessable Entity):
+```json
+{
+    "success": false,
+    "message": "Search query is required",
+    "errors": {
+        "q": ["The q field is required."]
+    }
 }
 ```
 
@@ -798,13 +878,18 @@ Get all students with optional filtering.
     "data": {
         "data": [
             {
-                "student_id": 1,
-                "student_number": "2021-0001-TG-0",
+                "student_number": "2021-00112-TG-0",
+                "first_name": "Janella",
+                "last_name": "Boncodin",
+                "middle_initial": "A",
+                "email": "janella.boncodin@example.com",
+                "course": "BSIT",
+                "year_level": "Fourth Year",
+                "section": "A",
+                "academic_status": "active",
                 "user": {
-                    "user_id": 1,
-                    "first_name": "John",
-                    "last_name": "Doe",
-                    "email": "john@example.com"
+                    "student_number": "2021-00112-TG-0",
+                    "status": "active"
                 }
             }
         ],
@@ -816,22 +901,27 @@ Get all students with optional filtering.
 ```
 
 ### 26. **Get Student**
-Get specific student by ID.
+Get specific student by student number.
 
-**Endpoint**: `GET /api/students/{id}`
+**Endpoint**: `GET /api/students/{student_number}`
 
 **Response** (200 OK):
 ```json
 {
     "success": true,
     "data": {
-        "student_id": 1,
-        "student_number": "2021-0001-TG-0",
+        "student_number": "2021-00112-TG-0",
+        "first_name": "Janella",
+        "last_name": "Boncodin",
+        "middle_initial": "A",
+        "email": "janella.boncodin@example.com",
+        "course": "BSIT",
+        "year_level": "Fourth Year",
+        "section": "A",
+        "academic_status": "active",
         "user": {
-            "user_id": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john@example.com"
+            "student_number": "2021-00112-TG-0",
+            "status": "active"
         }
     },
     "message": "Student retrieved successfully"
@@ -846,13 +936,15 @@ Create a new student.
 **Request Body**:
 ```json
 {
+    "student_number": "2021-00002-TG-0",
     "first_name": "Jane",
     "last_name": "Smith",
     "middle_initial": "A",
     "email": "jane@example.com",
-    "password": "password123",
-    "password_confirmation": "password123",
-    "student_number": "2021-0002-TG-0",
+    "course": "BSIT",
+    "year_level": "First Year",
+    "section": "A",
+    "academic_status": "active",
     "classes": [
         {
             "class_id": 1,
@@ -868,14 +960,15 @@ Create a new student.
 {
     "success": true,
     "data": {
-        "student_id": 2,
-        "student_number": "2021-0002-TG-0",
-        "user": {
-            "user_id": 2,
-            "first_name": "Jane",
-            "last_name": "Smith",
-            "email": "jane@example.com"
-        }
+        "student_number": "2021-00002-TG-0",
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "middle_initial": "A",
+        "email": "jane@example.com",
+        "course": "BSIT",
+        "year_level": "First Year",
+        "section": "A",
+        "academic_status": "active"
     },
     "message": "Student created successfully"
 }
@@ -884,7 +977,7 @@ Create a new student.
 ### 28. **Update Student**
 Update student information.
 
-**Endpoint**: `PUT /api/students/{id}`
+**Endpoint**: `PUT /api/students/{student_number}`
 
 **Request Body**:
 ```json
@@ -892,7 +985,8 @@ Update student information.
     "first_name": "Jane",
     "last_name": "Johnson",
     "email": "jane.johnson@example.com",
-    "student_number": "2021-0002-TG-0"
+    "course": "BSIT",
+    "year_level": "Second Year"
 }
 ```
 
@@ -901,14 +995,15 @@ Update student information.
 {
     "success": true,
     "data": {
-        "student_id": 2,
-        "student_number": "2021-0002-TG-0",
-        "user": {
-            "user_id": 2,
-            "first_name": "Jane",
-            "last_name": "Johnson",
-            "email": "jane.johnson@example.com"
-        }
+        "student_number": "2021-00002-TG-0",
+        "first_name": "Jane",
+        "last_name": "Johnson",
+        "middle_initial": "A",
+        "email": "jane.johnson@example.com",
+        "course": "BSIT",
+        "year_level": "Second Year",
+        "section": "A",
+        "academic_status": "active"
     },
     "message": "Student updated successfully"
 }
@@ -917,7 +1012,7 @@ Update student information.
 ### 29. **Delete Student**
 Delete a student.
 
-**Endpoint**: `DELETE /api/students/{id}`
+**Endpoint**: `DELETE /api/students/{student_number}`
 
 **Response** (200 OK):
 ```json
@@ -930,7 +1025,7 @@ Delete a student.
 ### 30. **Get Student Classes**
 Get all classes a student is enrolled in.
 
-**Endpoint**: `GET /api/students/{id}/classes`
+**Endpoint**: `GET /api/students/{student_number}/classes`
 
 **Response** (200 OK):
 ```json
@@ -938,7 +1033,7 @@ Get all classes a student is enrolled in.
     "success": true,
     "data": [
         {
-            "student_id": 1,
+            "student_number": "2021-00112-TG-0",
             "class_id": 1,
             "academic_year_id": 1,
             "year_level": "First Year",
@@ -960,7 +1055,7 @@ Get all classes a student is enrolled in.
 ### 31. **Assign Class to Student**
 Assign a class to a student.
 
-**Endpoint**: `POST /api/students/{id}/classes`
+**Endpoint**: `POST /api/students/{student_number}/classes`
 
 **Request Body**:
 ```json
@@ -976,7 +1071,7 @@ Assign a class to a student.
 {
     "success": true,
     "data": {
-        "student_id": 1,
+        "student_number": "2021-00112-TG-0",
         "class_id": 1,
         "academic_year_id": 1,
         "year_level": "Second Year",
@@ -997,7 +1092,7 @@ Assign a class to a student.
 ### 32. **Remove Class from Student**
 Remove a class assignment from a student.
 
-**Endpoint**: `DELETE /api/students/{id}/classes`
+**Endpoint**: `DELETE /api/students/{student_number}/classes`
 
 **Request Body**:
 ```json
@@ -1081,6 +1176,17 @@ Get all available classes.
 }
 ```
 
+#### **422 Unprocessable Entity**
+```json
+{
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+        "field_name": ["Error message"]
+    }
+}
+```
+
 #### **500 Internal Server Error**
 ```json
 {
@@ -1110,6 +1216,7 @@ Get all available classes.
 - ✅ Role assignment/removal
 - ✅ Get user roles
 - ✅ Get users by role
+- ✅ Updated schema with student_number as primary key
 
 #### **Role & Permission Management**
 - ✅ Full CRUD operations for roles
@@ -1124,6 +1231,7 @@ Get all available classes.
 - ✅ Get student classes
 - ✅ Get available classes
 - ✅ Class assignment/removal
+- ✅ Updated schema with personal info in student table
 
 #### **Security & Middleware**
 - ✅ Route protection with `auth:sanctum`
@@ -1139,6 +1247,7 @@ Get all available classes.
 - ✅ Comprehensive error handling
 - ✅ Authentication flow documented
 - ✅ Example API service provided
+- ✅ Updated for new schema structure
 
 #### **Recommended Frontend Features**
 - User authentication pages (login, logout, password reset)
@@ -1180,6 +1289,7 @@ For questions or issues with the API:
 - Verify request body format matches examples
 - Test endpoints with tools like Postman or curl
 
-**API Version**: v1.0  
-**Last Updated**: June 2024  
-**Status**: Phase 1 Complete ✅ 
+**API Version**: v2.0  
+**Last Updated**: December 2024  
+**Status**: Phase 1 Complete ✅  
+**Schema**: Updated with student_number as primary key 

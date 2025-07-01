@@ -20,7 +20,7 @@ class StudentController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Student::with(['user', 'classes']);
+            $query = Student::with(['user', 'studentClasses']);
 
             // Search filter
             if ($request->filled('search')) {
@@ -35,14 +35,14 @@ class StudentController extends Controller
 
             // Class filter
             if ($request->has('class_id')) {
-                $query->whereHas('classes', function ($q) use ($request) {
+                $query->whereHas('studentClasses', function ($q) use ($request) {
                     $q->where('class_id', $request->class_id);
                 });
             }
 
             // Year level filter
             if ($request->has('year_level')) {
-                $query->whereHas('classes', function ($q) use ($request) {
+                $query->whereHas('studentClasses', function ($q) use ($request) {
                     $q->where('year_level', $request->year_level);
                 });
             }
@@ -78,6 +78,9 @@ class StudentController extends Controller
                 'password' => 'required|string|min:6',
                 'student_number' => 'required|string|max:20|unique:student,student_number',
                 'academic_status' => 'required|in:active,dropped,shifted,graduated',
+                'course' => 'required|string|max:100',
+                'year_level' => 'required|string|max:50',
+                'section' => 'required|string|max:10',
                 'classes' => 'nullable|array',
                 'classes.*.class_id' => 'required|exists:class,class_id',
                 'classes.*.academic_year_id' => 'required|exists:academic_year,academic_year_id',
@@ -95,16 +98,19 @@ class StudentController extends Controller
             // Create student first
             $student = Student::create([
                 'student_number' => $request->student_number,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_initial' => $request->middle_initial,
                 'email' => $request->email,
+                'course' => $request->course,
+                'year_level' => $request->year_level,
+                'section' => $request->section,
                 'academic_status' => $request->academic_status
             ]);
 
             // Create user
             $user = User::create([
                 'student_number' => $request->student_number,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'middle_initial' => $request->middle_initial,
                 'password' => Hash::make($request->password),
                 'status' => 'active'
             ]);
@@ -121,7 +127,7 @@ class StudentController extends Controller
                 }
             }
 
-            $student->load(['user', 'classes']);
+            $student->load(['user', 'studentClasses']);
 
             return response()->json([
                 'success' => true,
@@ -141,10 +147,10 @@ class StudentController extends Controller
     /**
      * Display the specified student
      */
-    public function show(int $id): JsonResponse
+    public function show(string $student_number): JsonResponse
     {
         try {
-            $student = Student::with(['user', 'classes.class', 'classes.academicYear'])->findOrFail($id);
+            $student = Student::with(['user', 'studentClasses.class', 'studentClasses.academicYear'])->where('student_number', $student_number)->firstOrFail();
 
             return response()->json([
                 'success' => true,
@@ -193,17 +199,17 @@ class StudentController extends Controller
             }
 
             // Update student information
-            $studentData = $request->only(['email', 'academic_status']);
+            $studentData = $request->only(['first_name', 'last_name', 'middle_initial', 'email', 'academic_status']);
             $student->update($studentData);
 
             // Update user information
-            $userData = $request->only(['first_name', 'last_name', 'middle_initial']);
+            $userData = $request->only(['password']);
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
             $user->update($userData);
 
-            $student->load(['user', 'classes.class', 'classes.academicYear']);
+            $student->load(['user', 'studentClasses.class', 'studentClasses.academicYear']);
 
             return response()->json([
                 'success' => true,
@@ -228,22 +234,19 @@ class StudentController extends Controller
     /**
      * Remove the specified student
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(string $student_number): JsonResponse
     {
         try {
-            $student = Student::findOrFail($id);
+            $student = Student::where('student_number', $student_number)->firstOrFail();
 
             // Delete student class assignments first
-            $student->classes()->delete();
+            $student->studentClasses()->delete();
 
-            // Get the student number before deleting the student
-            $studentNumber = $student->student_number;
+            // Delete the associated user first (to avoid foreign key constraint)
+            User::where('student_number', $student_number)->delete();
 
             // Delete student
             $student->delete();
-
-            // Delete the associated user
-            User::where('student_number', $studentNumber)->delete();
 
             return response()->json([
                 'success' => true,
@@ -267,14 +270,14 @@ class StudentController extends Controller
     /**
      * Get student's classes
      */
-    public function getClasses(int $id): JsonResponse
+    public function getClasses(string $student_number): JsonResponse
     {
         try {
-            $student = Student::with(['classes.class', 'classes.academicYear'])->findOrFail($id);
+            $student = Student::with(['studentClasses.class', 'studentClasses.academicYear'])->where('student_number', $student_number)->firstOrFail();
 
             return response()->json([
                 'success' => true,
-                'data' => $student->classes,
+                'data' => $student->studentClasses,
                 'message' => 'Student classes retrieved successfully'
             ]);
 
@@ -295,10 +298,10 @@ class StudentController extends Controller
     /**
      * Assign class to student
      */
-    public function assignClass(Request $request, int $id): JsonResponse
+    public function assignClass(Request $request, string $student_number): JsonResponse
     {
         try {
-            $student = Student::findOrFail($id);
+            $student = Student::where('student_number', $student_number)->firstOrFail();
 
             $validator = Validator::make($request->all(), [
                 'class_id' => 'required|exists:class,class_id',
@@ -360,10 +363,10 @@ class StudentController extends Controller
     /**
      * Remove class assignment from student
      */
-    public function removeClass(Request $request, int $id): JsonResponse
+    public function removeClass(Request $request, string $student_number): JsonResponse
     {
         try {
-            $student = Student::findOrFail($id);
+            $student = Student::where('student_number', $student_number)->firstOrFail();
 
             $validator = Validator::make($request->all(), [
                 'class_id' => 'required|exists:class,class_id',

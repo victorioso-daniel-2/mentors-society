@@ -24,15 +24,11 @@ class UserController extends Controller
         // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->whereHas('student', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhereHas('student', function ($sq) use ($search) {
-                      $sq->where('email', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('student', function ($sq) use ($search) {
-                      $sq->where('student_number', 'like', "%{$search}%");
-                  });
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('student_number', 'like', "%{$search}%");
             });
         }
 
@@ -62,22 +58,30 @@ class UserController extends Controller
             });
         }
 
-        // Sorting
+        // Sorting (by student fields if needed)
         $sortBy = $request->get('sort_by', 'last_name');
         $sortOrder = $request->get('sort_order', 'asc');
-        $query->orderBy($sortBy, $sortOrder);
+        if (in_array($sortBy, ['first_name', 'last_name', 'email'])) {
+            $query->with(['student' => function ($q) use ($sortBy, $sortOrder) {
+                $q->orderBy($sortBy, $sortOrder);
+            }]);
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
 
         // Pagination
         $perPage = $request->get('per_page', 15);
         $users = $query->paginate($perPage);
-        $users->setCollection($users->getCollection()->map(function ($user) {
-            return [
+        $transformedData = [];
+        foreach ($users->items() as $user) {
+            $transformedData[] = [
                 'student_number' => $user->student_number,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'middle_initial' => $user->middle_initial,
-                'email' => $user->student ? $user->student->email : null,
-                'full_name' => $user->full_name,
+                'first_name' => $user->student?->first_name,
+                'last_name' => $user->student?->last_name,
+                'middle_initial' => $user->student?->middle_initial,
+                'email' => $user->student?->email,
+                'full_name' => $user->student ? ($user->student->first_name . ' ' . $user->student->last_name) : null,
+                'status' => $user->status,
                 'roles' => $user->userRoles->map(function ($userRole) {
                     return [
                         'role_id' => $userRole->role->role_id,
@@ -92,11 +96,24 @@ class UserController extends Controller
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at
             ];
-        }));
-
+        }
+        $responseData = [
+            'current_page' => $users->currentPage(),
+            'data' => $transformedData,
+            'first_page_url' => $users->url(1),
+            'from' => $users->firstItem(),
+            'last_page' => $users->lastPage(),
+            'last_page_url' => $users->url($users->lastPage()),
+            'next_page_url' => $users->nextPageUrl(),
+            'path' => $users->path(),
+            'per_page' => $users->perPage(),
+            'prev_page_url' => $users->previousPageUrl(),
+            'to' => $users->lastItem(),
+            'total' => $users->total()
+        ];
         return response()->json([
             'success' => true,
-            'data' => $users,
+            'data' => $responseData,
             'message' => 'Users retrieved successfully'
         ]);
     }
@@ -127,6 +144,7 @@ class UserController extends Controller
             'middle_initial' => $user->student?->middle_initial,
             'email' => $user->student?->email,
             'full_name' => $user->student ? ($user->student->first_name . ' ' . $user->student->last_name) : null,
+            'status' => $user->status,
             'roles' => $user->userRoles->map(function ($userRole) {
                 return [
                     'role_id' => $userRole->role->role_id,
@@ -174,6 +192,7 @@ class UserController extends Controller
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
             'middle_initial' => 'sometimes|nullable|string|max:10',
+            'email' => 'sometimes|required|email|max:255',
             'password' => 'sometimes|nullable|string|min:6',
             'status' => 'sometimes|required|in:active,inactive'
         ]);
@@ -183,18 +202,40 @@ class UserController extends Controller
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
-            ], 400);
+            ], 422);
         }
 
-        $userData = $request->only(['first_name', 'last_name', 'middle_initial', 'status']);
+        // Update student information
+        $student = Student::where('student_number', $student_number)->first();
+        if ($student) {
+            $studentData = $request->only(['first_name', 'last_name', 'middle_initial', 'email']);
+            $student->update($studentData);
+        }
+
+        // Update user information
+        $userData = $request->only(['status']);
         if ($request->filled('password')) {
             $userData['password'] = Hash::make($request->password);
         }
         $user->update($userData);
 
+        // Return updated user with student info
+        $user->load('student');
+        $responseData = [
+            'student_number' => $user->student_number,
+            'first_name' => $user->student?->first_name,
+            'last_name' => $user->student?->last_name,
+            'middle_initial' => $user->student?->middle_initial,
+            'email' => $user->student?->email,
+            'full_name' => $user->student ? ($user->student->first_name . ' ' . $user->student->last_name) : null,
+            'status' => $user->status,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at
+        ];
+
         return response()->json([
             'success' => true,
-            'data' => $user,
+            'data' => $responseData,
             'message' => 'User updated successfully'
         ]);
     }
@@ -236,16 +277,9 @@ class UserController extends Controller
      */
     public function assignRole(Request $request, $student_number): JsonResponse
     {
-        $user = User::where('student_number', $student_number)->first();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found'
-            ], 404);
-        }
         $validator = Validator::make($request->all(), [
-            'role_id' => 'required|integer|exists:ROLE,role_id',
-            'academic_year_id' => 'required|integer|exists:ACADEMIC_YEAR,academic_year_id',
+            'role_id' => 'required|exists:role,role_id',
+            'academic_year_id' => 'required|exists:academic_year,academic_year_id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date'
         ]);
@@ -254,7 +288,7 @@ class UserController extends Controller
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
-            ], 400);
+            ], 422);
         }
         $existingRole = UserRole::where('student_number', $student_number)
             ->where('role_id', $request->role_id)
@@ -264,7 +298,7 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'User already has this role for the specified academic year'
-            ], 400);
+            ], 422);
         }
         $userRole = UserRole::create([
             'student_number' => $student_number,
@@ -278,6 +312,7 @@ class UserController extends Controller
             'success' => true,
             'data' => [
                 'user_role_id' => $userRole->user_role_id,
+                'student_number' => $userRole->student_number,
                 'role_id' => $userRole->role->role_id,
                 'role_name' => $userRole->role->role_name,
                 'academic_year_id' => $userRole->academic_year_id,
@@ -285,7 +320,7 @@ class UserController extends Controller
                 'end_date' => $userRole->end_date
             ],
             'message' => 'Role assigned successfully'
-        ]);
+        ], 201);
     }
 
     /**
@@ -321,16 +356,20 @@ class UserController extends Controller
             ->get();
         $usersData = $users->map(function ($user) {
             return [
-                'id' => $user->user_id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'full_name' => $user->full_name,
-                'student_number' => $user->student?->student_number,
+                'student_number' => $user->student_number,
+                'first_name' => $user->student?->first_name,
+                'last_name' => $user->student?->last_name,
+                'middle_initial' => $user->student?->middle_initial,
+                'email' => $user->student?->email,
+                'full_name' => $user->student ? ($user->student->first_name . ' ' . $user->student->last_name) : null,
+                'status' => $user->status,
                 'roles' => $user->userRoles->map(function ($userRole) {
                     return [
+                        'role_id' => $userRole->role->role_id,
                         'role_name' => $userRole->role->role_name,
                         'academic_year_id' => $userRole->academic_year_id,
+                        'start_date' => $userRole->start_date,
+                        'end_date' => $userRole->end_date,
                         'is_active' => $userRole->start_date <= now() &&
                                      ($userRole->end_date === null || $userRole->end_date >= now())
                     ];
@@ -349,42 +388,67 @@ class UserController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
+        // Check if user is authenticated
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
-            'query' => 'required|string|min:2',
+            'q' => 'required|string|min:2',
             'limit' => 'sometimes|integer|min:1|max:50'
         ]);
+        
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
+                'message' => 'Search query is required',
                 'errors' => $validator->errors()
-            ], 400);
+            ], 422);
         }
-        $query = $request->get('query');
+        
+        $query = $request->get('q');
         $limit = $request->get('limit', 10);
-        $users = User::with(['student'])
-            ->where(function ($q) use ($query) {
-                $q->where('first_name', 'like', "%{$query}%")
-                  ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhereHas('student', function ($sq) use ($query) {
-                      $sq->where('email', 'like', "%{$query}%");
-                  })
-                  ->orWhereHas('student', function ($sq) use ($query) {
-                      $sq->where('student_number', 'like', "%{$query}%");
-                  });
-            })
+        
+        // Search students first, then get associated users
+        $students = Student::where('first_name', 'like', "%{$query}%")
+            ->orWhere('last_name', 'like', "%{$query}%")
+            ->orWhere('email', 'like', "%{$query}%")
+            ->orWhere('student_number', 'like', "%{$query}%")
             ->limit($limit)
             ->get();
-        $usersData = $users->map(function ($user) {
-            return [
-                'id' => $user->user_id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'full_name' => $user->full_name,
-                'student_number' => $user->student?->student_number
-            ];
-        });
+            
+        $usersData = [];
+        foreach ($students as $student) {
+            // Get the associated user for this student
+            $user = User::with(['userRoles.role'])->where('student_number', $student->student_number)->first();
+            
+            if ($user) {
+                $usersData[] = [
+                    'student_number' => $user->student_number,
+                    'first_name' => $student->first_name,
+                    'last_name' => $student->last_name,
+                    'middle_initial' => $student->middle_initial,
+                    'email' => $student->email,
+                    'full_name' => $student->first_name . ' ' . $student->last_name,
+                    'status' => $user->status,
+                    'roles' => $user->userRoles->map(function ($userRole) {
+                        return [
+                            'role_id' => $userRole->role->role_id,
+                            'role_name' => $userRole->role->role_name,
+                            'academic_year_id' => $userRole->academic_year_id,
+                            'start_date' => $userRole->start_date,
+                            'end_date' => $userRole->end_date,
+                            'is_active' => $userRole->start_date <= now() &&
+                                         ($userRole->end_date === null || $userRole->end_date >= now())
+                        ];
+                    })
+                ];
+            }
+        }
+        
         return response()->json([
             'success' => true,
             'data' => $usersData,

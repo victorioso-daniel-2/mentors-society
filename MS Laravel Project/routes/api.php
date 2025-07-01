@@ -69,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // =============================================
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
+        Route::get('/search', [UserController::class, 'search']);
+        Route::get('/role/{roleName}', [UserController::class, 'getUsersByRole']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::post('/', [UserController::class, 'store']);
         Route::put('/{id}', [UserController::class, 'update']);
@@ -76,13 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/roles', [UserController::class, 'getUserRoles']);
         Route::post('/{id}/roles', [UserController::class, 'assignRole']);
         Route::delete('/{id}/roles/{roleId}', [UserController::class, 'removeRole']);
-        Route::get('/role/{roleName}', [UserController::class, 'getUsersByRole']);
     });
-
-    // =============================================
-    // User Search (separate route for search functionality)
-    // =============================================
-    Route::get('/users-search', [UserController::class, 'search']);
 
     // =============================================
     // Role and Permission Management
@@ -98,13 +94,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/permissions/all', [RoleController::class, 'getAllPermissions']);
     });
 
-    Route::prefix('permissions')->group(function () {
-        Route::get('/', 'PermissionController@index');
-        Route::get('/{id}', 'PermissionController@show');
-        Route::post('/', 'PermissionController@store');
-        Route::put('/{id}', 'PermissionController@update');
-        Route::delete('/{id}', 'PermissionController@destroy');
-    });
+    // Route::prefix('permissions')->group(function () {
+    //     Route::get('/', 'PermissionController@index');
+    //     Route::get('/{id}', 'PermissionController@show');
+    //     Route::post('/', 'PermissionController@store');
+    //     Route::put('/{id}', 'PermissionController@update');
+    //     Route::delete('/{id}', 'PermissionController@destroy');
+    // });
 
     // =============================================
     // Student Management
@@ -121,14 +117,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/classes/available', [StudentController::class, 'getAvailableClasses']);
     });
 
-    Route::prefix('classes')->group(function () {
-        Route::get('/', 'ClassController@index');
-        Route::get('/{id}', 'ClassController@show');
-        Route::post('/', 'ClassController@store');
-        Route::put('/{id}', 'ClassController@update');
-        Route::delete('/{id}', 'ClassController@destroy');
-        Route::get('/{id}/students', 'ClassController@getClassStudents');
-    });
+    // Route::prefix('classes')->group(function () {
+    //     Route::get('/', 'ClassController@index');
+    //     Route::get('/{id}', 'ClassController@show');
+    //     Route::post('/', 'ClassController@store');
+    //     Route::put('/{id}', 'ClassController@update');
+    //     Route::delete('/{id}', 'ClassController@destroy');
+    //     Route::get('/{id}/students', 'ClassController@getClassStudents');
+    // });
 
     // =============================================
     // Event Management
@@ -269,14 +265,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // =============================================
     // Communication and Task Management
     // =============================================
-    Route::prefix('social-media')->group(function () {
-        Route::get('/', 'SocialMediaController@index');
-        Route::get('/{id}', 'SocialMediaController@show');
-        Route::post('/', 'SocialMediaController@store');
-        Route::put('/{id}', 'SocialMediaController@update');
-        Route::delete('/{id}', 'SocialMediaController@destroy');
-    });
-
     Route::prefix('tasks')->group(function () {
         Route::get('/', 'TaskController@index');
         Route::get('/{id}', 'TaskController@show');
@@ -284,22 +272,45 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', 'TaskController@update');
         Route::delete('/{id}', 'TaskController@destroy');
         Route::get('/assigned/{userId}', 'TaskController@getAssignedTasks');
-        Route::get('/by-status/{status}', 'TaskController@getTasksByStatus');
+        Route::get('/created/{userId}', 'TaskController@getCreatedTasks');
+        Route::post('/{id}/assign/{userId}', 'TaskController@assignTask');
         Route::post('/{id}/complete', 'TaskController@completeTask');
+    });
+
+    // =============================================
+    // Social Media Management
+    // =============================================
+    Route::prefix('social-media')->group(function () {
+        Route::get('/', 'SocialMediaController@index');
+        Route::get('/{id}', 'SocialMediaController@show');
+        Route::post('/', 'SocialMediaController@store');
+        Route::put('/{id}', 'SocialMediaController@update');
+        Route::delete('/{id}', 'SocialMediaController@destroy');
+        Route::get('/platform/{platform}', 'SocialMediaController@getByPlatform');
+    });
+
+    // =============================================
+    // Budget Management
+    // =============================================
+    Route::prefix('budgets')->group(function () {
+        Route::get('/', 'BudgetController@index');
+        Route::get('/{id}', 'BudgetController@show');
+        Route::post('/', 'BudgetController@store');
+        Route::put('/{id}', 'BudgetController@update');
+        Route::delete('/{id}', 'BudgetController@destroy');
+        Route::get('/event/{eventId}', 'BudgetController@getEventBudget');
+        Route::get('/organization', 'BudgetController@getOrganizationBudget');
     });
 
     // =============================================
     // Reports and Analytics
     // =============================================
     Route::prefix('reports')->group(function () {
-        Route::get('/events/summary', 'ReportController@getEventsSummary');
-        Route::get('/financial/summary', 'ReportController@getFinancialSummary');
-        Route::get('/inventory/summary', 'ReportController@getInventorySummary');
-        Route::get('/student/participation', 'ReportController@getStudentParticipation');
-        Route::get('/event/{eventId}/detailed', 'ReportController@getEventDetailedReport');
-        Route::get('/export/events', 'ReportController@exportEvents');
-        Route::get('/export/financial', 'ReportController@exportFinancial');
-        Route::get('/export/inventory', 'ReportController@exportInventory');
+        Route::get('/events', 'ReportController@getEventReport');
+        Route::get('/financial', 'ReportController@getFinancialReport');
+        Route::get('/attendance', 'ReportController@getAttendanceReport');
+        Route::get('/inventory', 'ReportController@getInventoryReport');
+        Route::get('/user-activity', 'ReportController@getUserActivityReport');
     });
 
     // =============================================
@@ -336,4 +347,13 @@ Route::middleware('api')->group(function () {
     // =============================================
     // Dashboard
     // =============================================
+});
+
+// =============================================
+// Public Routes (No Authentication Required)
+// =============================================
+
+// User Search (requires authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users-search', [UserController::class, 'search']);
 });

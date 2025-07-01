@@ -41,9 +41,9 @@ class Student extends Model
     /**
      * Get the classes for this student
      */
-    public function classes(): HasMany
+    public function studentClasses()
     {
-        return $this->hasMany(StudentClass::class, 'student_id');
+        return $this->hasMany(StudentClass::class, 'student_number', 'student_number');
     }
 
     /**
@@ -75,7 +75,7 @@ class Student extends Model
      */
     public function currentClasses()
     {
-        return $this->classes()
+        return $this->studentClasses()
                    ->whereHas('academicYear', function ($query) {
                        $query->where('start_date', '<=', now())
                              ->where('end_date', '>=', now());
@@ -87,6 +87,6 @@ class Student extends Model
      */
     public function isEnrolledInClass(int $classId): bool
     {
-        return $this->classes()->where('class_id', $classId)->exists();
+        return $this->studentClasses()->where('class_id', $classId)->exists();
     }
 } 
