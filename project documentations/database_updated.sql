@@ -335,6 +335,34 @@ CREATE TABLE TRANSACTION_LOG (
 );
 
 -- =============================================
+-- Event Budget Table
+-- =============================================
+CREATE TABLE event_budget (
+    event_budget_id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (event_id),
+    FOREIGN KEY (event_id) REFERENCES EVENT(event_id) ON DELETE CASCADE
+);
+
+-- =============================================
+-- Organization Budget Table
+-- =============================================
+CREATE TABLE organization_budget (
+    org_budget_id INT AUTO_INCREMENT PRIMARY KEY,
+    academic_year_id INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE (academic_year_id),
+    FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id) ON DELETE CASCADE
+);
+
+-- =============================================
 -- Indexes for Performance Optimization
 -- =============================================
 
@@ -403,6 +431,10 @@ CREATE INDEX idx_itemborrowing_conditionid_return ON ITEM_BORROWING(condition_id
 
 -- TRANSACTION_LOG table
 CREATE INDEX idx_transactionlog_userid ON TRANSACTION_LOG(user_id);
+
+-- Add indexes for new tables
+CREATE UNIQUE INDEX idx_eventbudget_eventid ON event_budget(event_id);
+CREATE UNIQUE INDEX idx_orgbudget_academicyearid ON organization_budget(academic_year_id);
 
 -- =====================
 -- CONSTRAINTS (if not already present)
