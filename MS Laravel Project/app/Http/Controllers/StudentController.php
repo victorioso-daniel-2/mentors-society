@@ -20,7 +20,7 @@ class StudentController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Student::with(['user', 'studentClasses']);
+            $query = Student::with(['user', 'studentClasses.class']);
 
             // Search filter
             if ($request->filled('search')) {

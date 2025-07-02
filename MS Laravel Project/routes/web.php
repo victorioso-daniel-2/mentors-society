@@ -21,10 +21,26 @@ Route::get('/vue-test', function () {
     return view('vue-test');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
+Route::get('/student_dashboard', function () {
+    return view('student_dashboard');
 });
 
 Route::get('/student-dashboard', function () {
     return view('student_dashboard');
+});
+
+Route::get('/officer_dashboard', function () {
+    return view('officer_dashboard');
+});
+
+Route::get('/student_management', function () {
+    return view('student_management');
+});
+
+Route::get('/dashboard', function () {
+    return view('officer_dashboard');
+});
+
+Route::get('/officer-dashboard', function () {
+    return view('officer_dashboard');
 });

@@ -16,7 +16,9 @@ class DashboardController extends Controller
     // Officer dashboard
     public function overview(Request $request)
     {
-        $totalUsers = Student::count();
+        $totalUsers = Student::whereHas('user', function($q) {
+            $q->where('status', 'active');
+        })->count();
 
         return response()->json([
             'success' => true,

@@ -85,8 +85,7 @@
                             <span class="block text-xs text-gray-500" id="dropdownNumber">2021-00112-TG-0</span>
                         </div>
                         <div class="text-sm text-gray-600 mb-4" id="dropdownEmail">student@email.com</div>
-                        <button id="officerBtn" class="w-full flex items-center gap-2 justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-4 py-2 rounded-lg transition-colors mb-2"><i class="fa-solid fa-user-tie"></i> Officer</button>
-                        <button id="logoutBtn" class="w-full flex items-center gap-2 justify-center bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg transition-colors"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                        <button id="officerBtn" class="w-full flex items-center gap-2 justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-4 py-2 rounded-lg transition-colors mb-2" style="display:none"><i class="fa-solid fa-user-tie"></i> Officer</button>
                     </div>
                 </div>
             </div>
@@ -142,6 +141,7 @@
     // Display user information from localStorage
     document.addEventListener('DOMContentLoaded', function() {
         const userData = localStorage.getItem('user_data');
+        const userRoles = localStorage.getItem('user_roles');
         if (userData) {
             const user = JSON.parse(userData);
             document.getElementById('userName').textContent = `${user.first_name} ${user.last_name}`;
@@ -150,35 +150,20 @@
             document.getElementById('dropdownNumber').textContent = user.student_number;
             document.getElementById('dropdownEmail').textContent = user.email || 'No email';
         }
-        // Handle logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async function(e) {
-                e.stopPropagation();
-                try {
-                    await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || ''),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                        },
-                        credentials: 'include',
-                    });
-                } catch (err) {}
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user_data');
-                localStorage.removeItem('user_roles');
-                window.location.href = '/';
-            });
+        // Show Officer button if user has a role with role_priority <= 20
+        if (userRoles) {
+            try {
+                const roles = JSON.parse(userRoles);
+                const hasOfficerAccess = roles.some(r => Number(r.role_priority) <= 20);
+                if (hasOfficerAccess) {
+                    document.getElementById('officerBtn').style.display = '';
+                }
+            } catch (e) {}
         }
-        // Officer button logic
-        const officerBtn = document.getElementById('officerBtn');
-        if (officerBtn) {
-            officerBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                window.location.href = '/dashboard';
-            });
+        // Remove logout button from dropdown (handled in sidebar)
+        const dropdownLogoutBtn = document.querySelector('#profileDropdown #logoutBtn');
+        if (dropdownLogoutBtn) {
+            dropdownLogoutBtn.parentNode.removeChild(dropdownLogoutBtn);
         }
         // Profile dropdown logic
         const profileArea = document.getElementById('profileArea');
@@ -249,6 +234,24 @@
             } catch (err) {}
         }
         loadStudentDashboard();
+        // Officer button logic
+        const officerBtn = document.getElementById('officerBtn');
+        if (officerBtn) {
+            officerBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                window.location.href = '/officer_dashboard';
+            });
+        }
+        // Logout button logic
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                localStorage.removeItem('user_roles');
+                window.location.href = '/';
+            });
+        }
     });
 </script>
 </body>

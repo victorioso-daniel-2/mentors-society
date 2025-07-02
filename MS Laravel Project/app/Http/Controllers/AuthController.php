@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Student;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -55,6 +56,17 @@ class AuthController extends Controller
                 ], 404);
             }
 
+            // Check if user is inactive or graduated
+            if ($user->status !== 'active') {
+                $msg = $user->status === 'graduated'
+                    ? 'Your account is graduated. Please contact an officer to reactivate.'
+                    : 'Your account is inactive. Please contact an officer.';
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg
+                ], 403);
+            }
+
             // Check if user has password (assuming password is stored in users table)
             if (!$user->password) {
                 return response()->json([
@@ -92,6 +104,7 @@ class AuthController extends Controller
                         return [
                             'role_id' => $role->role_id,
                             'role_name' => $role->role_name,
+                            'role_priority' => $role->role_priority,
                             'academic_year_id' => $role->pivot->academic_year_id ?? null,
                             'start_date' => $role->pivot->start_date ?? null,
                             'end_date' => $role->pivot->end_date ?? null,
@@ -103,8 +116,8 @@ class AuthController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            \Log::error('Login error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Login error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,

@@ -51,7 +51,7 @@
         <nav class="flex-1">
             <ul class="space-y-2">
                 <li><a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg"><span class="sidebar-indicator"></span><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
-                <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-user-graduate"></i> Student</a></li>
+                <li><a href="student_management" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-user-graduate"></i> Student</a></li>
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-calendar-days"></i> Event</a></li>
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-peso-sign"></i> Financial</a></li>
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-boxes-stacked"></i> Inventory</a></li>
@@ -92,7 +92,6 @@
                         </div>
                         <div class="text-sm text-gray-600 mb-4" id="dropdownEmail">student@email.com</div>
                         <button id="studentBtn" class="w-full flex items-center gap-2 justify-center bg-black hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-lg transition-colors mb-2"><i class="fa-solid fa-user-graduate"></i> Student</button>
-                        <button id="logoutBtn" class="w-full flex items-center gap-2 justify-center bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg transition-colors"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                     </div>
                 </div>
             </div>
@@ -194,6 +193,11 @@
             e.stopPropagation();
         });
 
+        // Remove logout button from dropdown (handled in sidebar)
+        const dropdownLogoutBtn = document.querySelector('#profileDropdown #logoutBtn');
+        if (dropdownLogoutBtn) {
+            dropdownLogoutBtn.parentNode.removeChild(dropdownLogoutBtn);
+        }
         // Student button logic
         const studentBtn = document.getElementById('studentBtn');
         if (studentBtn) {
@@ -202,30 +206,9 @@
                 window.location.href = '/student-dashboard';
             });
         }
-        // Logout logic (fetch endpoint)
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async function(e) {
-                e.stopPropagation();
-                try {
-                    await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || ''),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                        },
-                        credentials: 'include',
-                    });
-                } catch (err) {}
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user_data');
-                localStorage.removeItem('user_roles');
-                window.location.href = '/';
-            });
-        }
-        // Dynamic dashboard data
-        async function loadDashboard() {
+
+        // Fetch officer dashboard stats
+        async function loadOfficerDashboard() {
             try {
                 const res = await fetch('/api/dashboard/overview', {
                     headers: {
@@ -237,43 +220,14 @@
                 if (!res.ok) return;
                 const data = await res.json();
                 if (data && data.success && data.data) {
-                    // Stats
                     document.querySelectorAll('.stat-total-users').forEach(e => e.textContent = data.data.total_users || 0);
                     document.querySelectorAll('.stat-active-events').forEach(e => e.textContent = data.data.active_events || 0);
                     document.querySelectorAll('.stat-pending-tasks').forEach(e => e.textContent = data.data.pending_tasks || 0);
                     document.querySelectorAll('.stat-total-budget').forEach(e => e.textContent = data.data.total_budget || 0);
-                    // Activities
-                    const recentActivities = document.getElementById('recentActivities');
-                    if (recentActivities && Array.isArray(data.data.recent_activities)) {
-                        recentActivities.innerHTML = data.data.recent_activities.map(act => `
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid ${act.icon} text-${act.color}-500 text-xl mt-1"></i>
-                                <div>
-                                    <span class="font-semibold text-gray-700">${act.title}</span>
-                                    <div class="text-gray-500 text-sm">${act.description}<br><span class="text-xs">${act.time}</span></div>
-                                </div>
-                            </li>
-                        `).join('');
-                    }
-                    // Events
-                    const upcomingEvents = document.getElementById('upcomingEvents');
-                    if (upcomingEvents && Array.isArray(data.data.upcoming_events)) {
-                        upcomingEvents.innerHTML = data.data.upcoming_events.map(ev => `
-                            <li>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid ${ev.icon} text-${ev.color}-500 text-xl"></i>
-                                    <div>
-                                        <span class="font-semibold text-gray-700">${ev.title}</span>
-                                        <div class="text-gray-500 text-sm">${ev.datetime}<br>${ev.location}</div>
-                                    </div>
-                                </div>
-                            </li>
-                        `).join('');
-                    }
                 }
             } catch (err) {}
         }
-        loadDashboard();
+        loadOfficerDashboard();
     });
 </script>
 </body>
