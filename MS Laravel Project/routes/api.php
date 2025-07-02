@@ -328,6 +328,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sanctum-test', function () {
         return response()->json(['message' => 'Authenticated'], 200);
     });
+
+    Route::get('/dashboard/overview', [\App\Http\Controllers\DashboardController::class, 'overview']);
+    Route::get('/dashboard/student-overview', [\App\Http\Controllers\DashboardController::class, 'studentOverview']);
 });
 
 Route::middleware('api')->group(function () {

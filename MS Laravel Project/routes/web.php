@@ -20,3 +20,11 @@ Route::get('/', function () {
 Route::get('/vue-test', function () {
     return view('vue-test');
 });
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
+
+Route::get('/student-dashboard', function () {
+    return view('student_dashboard');
+});
