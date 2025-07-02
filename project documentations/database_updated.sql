@@ -1,5 +1,5 @@
 -- =============================================
--- Mentors Society Database Schema
+-- Mentors Society Database Schema (Updated to match Laravel migrations)
 -- =============================================
 
 -- Creating database
@@ -11,12 +11,12 @@ USE mentors_society;
 -- =============================================
 
 -- ACADEMIC_YEAR: Defines academic year boundaries
-CREATE TABLE ACADEMIC_YEAR (
-    academic_year_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE academic_year (
+    academic_year_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    description VARCHAR(100),
-    UNIQUE (start_date, end_date)
+    end_date DATE NULL,
+    description VARCHAR(32) NOT NULL,
+    UNIQUE KEY unique_academic_year (start_date, end_date)
 );
 
 -- =============================================
@@ -24,180 +24,205 @@ CREATE TABLE ACADEMIC_YEAR (
 -- =============================================
 
 -- PERMISSION: Individual system permissions
-CREATE TABLE PERMISSION (
-    permission_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE permission (
+    permission_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     permission_name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT
+    description VARCHAR(255) NULL
 );
 
 -- ROLE: Defines roles with base permissions
-CREATE TABLE ROLE (
-    role_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE role (
+    role_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT,
-    role_priority INT -- Lower number = higher priority (President = 1, Regular Student = 99)
+    description VARCHAR(255) NULL,
+    role_priority INT DEFAULT 0
 );
 
 -- ROLE_PERMISSION: Maps permissions to roles
-CREATE TABLE ROLE_PERMISSION (
-    role_id INT,
-    permission_id INT,
-    PRIMARY KEY (role_id, permission_id),
-    FOREIGN KEY (role_id) REFERENCES ROLE(role_id),
-    FOREIGN KEY (permission_id) REFERENCES PERMISSION(permission_id)
+CREATE TABLE role_permission (
+    role_permission_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    role_id BIGINT UNSIGNED NOT NULL,
+    permission_id BIGINT UNSIGNED NOT NULL,
+    UNIQUE KEY unique_role_permission (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES role(role_id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permission(permission_id) ON DELETE CASCADE
 );
 
--- USER: Base user table for all system users
--- This implements a role specialization pattern where USER contains common attributes
--- and specialized tables (like STUDENT) extend it with role-specific attributes
-CREATE TABLE USER (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT,
-    first_name VARCHAR(50) NOT NULL,
+-- STUDENT: Core student information
+CREATE TABLE student (
+    student_number VARCHAR(20) PRIMARY KEY,
     last_name VARCHAR(50) NOT NULL,
-    middle_initial VARCHAR(5),
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NULL,
-    status ENUM('active','inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES STUDENT(student_id)
+    first_name VARCHAR(50) NOT NULL,
+    middle_initial VARCHAR(5) NULL,
+    course VARCHAR(100) NULL,
+    year_level VARCHAR(50) NULL,
+    section VARCHAR(10) NULL,
+    academic_status ENUM('active', 'dropped', 'shifted', 'graduated') DEFAULT 'active',
+    email VARCHAR(100) UNIQUE
 );
 
--- PERSONAL_ACCESS_TOKENS: Laravel Sanctum table for API token authentication
-CREATE TABLE personal_access_tokens (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    tokenable_type VARCHAR(255) NOT NULL,
-    tokenable_id BIGINT UNSIGNED NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    abilities TEXT,
-    last_used_at TIMESTAMP NULL,
-    expires_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX personal_access_tokens_tokenable_type_tokenable_id_index (tokenable_type, tokenable_id)
+-- USER: Authentication table (extends student)
+CREATE TABLE user (
+    student_number VARCHAR(20) PRIMARY KEY,
+    password VARCHAR(255) NOT NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    FOREIGN KEY (student_number) REFERENCES student(student_number)
 );
 
 -- USER_ROLE: Tracks role assignments with time periods
-CREATE TABLE USER_ROLE (
-    user_role_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    role_id INT,
-    academic_year_id INT,
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id),
-    FOREIGN KEY (role_id) REFERENCES ROLE(role_id),
-    FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id)
+CREATE TABLE user_role (
+    user_role_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    student_number VARCHAR(20) NOT NULL,
+    role_id BIGINT UNSIGNED NOT NULL,
+    academic_year_id BIGINT UNSIGNED NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    UNIQUE KEY unique_user_role (student_number, role_id, academic_year_id),
+    FOREIGN KEY (student_number) REFERENCES user(student_number) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role(role_id) ON DELETE CASCADE,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE CASCADE
 );
 
 -- USER_ROLE_PERMISSION: Custom permission adjustments for user roles
-CREATE TABLE USER_ROLE_PERMISSION (
-    user_role_id INT,
-    permission_id INT,
-    is_granted BOOLEAN NOT NULL,
-    reason TEXT,
-    PRIMARY KEY (user_role_id, permission_id),
-    FOREIGN KEY (user_role_id) REFERENCES USER_ROLE(user_role_id),
-    FOREIGN KEY (permission_id) REFERENCES PERMISSION(permission_id)
+CREATE TABLE user_role_permission (
+    user_role_permission_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_role_id BIGINT UNSIGNED NOT NULL,
+    permission_id BIGINT UNSIGNED NOT NULL,
+    UNIQUE KEY unique_user_role_permission (user_role_id, permission_id),
+    FOREIGN KEY (user_role_id) REFERENCES user_role(user_role_id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permission(permission_id) ON DELETE CASCADE
 );
 
 -- =============================================
--- Student Management
+-- Class Management System
 -- =============================================
 
--- CLASS: Defines class groupings (e.g., BSED MATH, BSED ENGLISH)
-CREATE TABLE CLASS (
-    class_id INT AUTO_INCREMENT PRIMARY KEY,
+-- CLASS: Defines class groupings
+CREATE TABLE class (
+    class_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     class_name VARCHAR(100) NOT NULL,
-    academic_year_id INT,
-    class_president_id INT,
-    remarks VARCHAR(255),
-    FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id),
-    FOREIGN KEY (class_president_id) REFERENCES USER(user_id)
+    academic_year_id BIGINT UNSIGNED NULL,
+    class_president_id VARCHAR(20) NULL,
+    remarks VARCHAR(255) NULL,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id),
+    FOREIGN KEY (class_president_id) REFERENCES user(student_number)
 );
 
--- STUDENT: Extends USER with student-specific attributes
--- This table implements the role specialization pattern
-CREATE TABLE STUDENT (
-    student_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_number VARCHAR(20) UNIQUE,
-    course VARCHAR(100),
-    year_level VARCHAR(10),
-    section VARCHAR(10),
-    status ENUM('active','dropped','shifted','graduated') DEFAULT 'active'
+-- CLASS_SUBJECT: Subjects taught in classes
+CREATE TABLE class_subject (
+    class_subject_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    class_id BIGINT UNSIGNED NOT NULL,
+    academic_year_id BIGINT UNSIGNED NULL,
+    subject_name VARCHAR(100) NOT NULL,
+    description VARCHAR(255) NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    UNIQUE KEY unique_class_subject (class_id, subject_name, academic_year_id),
+    FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE SET NULL
 );
 
--- STUDENT_CLASS: Maps students to classes with year level
-CREATE TABLE STUDENT_CLASS (
-    student_id INT,
-    class_id INT,
-    academic_year_id INT,
-    year_level VARCHAR(50) NOT NULL DEFAULT 'Other' CHECK (year_level IN ('First Year', 'Second Year', 'Third Year', 'Fourth Year', 'Other')),
-    PRIMARY KEY (student_id, class_id, academic_year_id),
-    FOREIGN KEY (student_id) REFERENCES STUDENT(student_id),
-    FOREIGN KEY (class_id) REFERENCES CLASS(class_id),
-    FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id)
+-- CLASS_SCHEDULE: Class schedules
+CREATE TABLE class_schedule (
+    class_schedule_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    class_id BIGINT UNSIGNED NOT NULL,
+    subject_id BIGINT UNSIGNED NOT NULL,
+    academic_year_id BIGINT UNSIGNED NULL,
+    day_of_week VARCHAR(20) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    room VARCHAR(100) NULL,
+    UNIQUE KEY class_schedule_unique (class_id, subject_id, day_of_week, start_time, academic_year_id),
+    FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES class_subject(class_subject_id) ON DELETE CASCADE,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE SET NULL
+);
+
+-- CLASS_PROFESSOR: Professor assignments
+CREATE TABLE class_professor (
+    class_professor_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    class_id BIGINT UNSIGNED NOT NULL,
+    subject_id BIGINT UNSIGNED NULL,
+    academic_year_id BIGINT UNSIGNED NULL,
+    professor_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NULL,
+    phone VARCHAR(30) NULL,
+    UNIQUE KEY unique_class_professor (class_id, professor_name, academic_year_id),
+    FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES class_subject(class_subject_id) ON DELETE SET NULL,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE SET NULL
+);
+
+-- STUDENT_CLASS: Student enrollment in classes
+CREATE TABLE student_class (
+    student_number VARCHAR(20) NOT NULL,
+    class_id BIGINT UNSIGNED NOT NULL,
+    academic_year_id BIGINT UNSIGNED NOT NULL,
+    year_level VARCHAR(50) DEFAULT 'Other',
+    PRIMARY KEY (student_number, class_id, academic_year_id),
+    FOREIGN KEY (student_number) REFERENCES student(student_number),
+    FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE RESTRICT,
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE RESTRICT
 );
 
 -- =============================================
--- Event Management
+-- Event Management System
 -- =============================================
 
 -- EVENT_STATUS: Tracks event lifecycle
-CREATE TABLE EVENT_STATUS (
-    status_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE event_status (
+    status_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     status_name VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- EVENT: Stores event details
-CREATE TABLE EVENT (
-    event_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE event (
+    event_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    description TEXT,
+    description TEXT NULL,
     event_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     venue VARCHAR(100) NOT NULL,
-    status_id INT,
-    created_by INT,
-    capacity INT,
-    FOREIGN KEY (status_id) REFERENCES EVENT_STATUS(status_id),
-    FOREIGN KEY (created_by) REFERENCES USER(user_id)
+    status_id BIGINT UNSIGNED NULL,
+    created_by VARCHAR(20) NULL,
+    capacity INT NULL,
+    FOREIGN KEY (status_id) REFERENCES event_status(status_id) ON DELETE RESTRICT,
+    FOREIGN KEY (created_by) REFERENCES user(student_number) ON DELETE SET NULL
 );
 
 -- EVENT_REGISTRATION: Student registrations for events
-CREATE TABLE EVENT_REGISTRATION (
-    registration_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT,
-    student_id INT,
+CREATE TABLE event_registration (
+    registration_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NOT NULL,
+    student_number VARCHAR(20) NOT NULL,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (student_id) REFERENCES STUDENT(student_id)
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_number) REFERENCES student(student_number) ON DELETE CASCADE
 );
 
 -- EVENT_PARTICIPATION: Tracks attendance and general feedback
-CREATE TABLE EVENT_PARTICIPATION (
-    participation_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT,
-    student_id INT,
+CREATE TABLE event_participation (
+    participation_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NOT NULL,
+    student_number VARCHAR(20) NOT NULL,
     attended BOOLEAN NOT NULL,
-    feedback TEXT,
-    feedback_date TIMESTAMP,
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (student_id) REFERENCES STUDENT(student_id)
+    feedback TEXT NULL,
+    feedback_date TIMESTAMP NULL,
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_number) REFERENCES student(student_number) ON DELETE CASCADE
 );
 
 -- EVENT_EVALUATION: Stores structured evaluation responses
-CREATE TABLE EVENT_EVALUATION (
-    evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
-    participation_id INT,
+CREATE TABLE event_evaluation (
+    evaluation_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    participation_id BIGINT UNSIGNED NOT NULL,
     category VARCHAR(50) NOT NULL,
     question_text TEXT NOT NULL,
-    response VARCHAR(50),
-    numerical_rating INT CHECK (numerical_rating BETWEEN 1 AND 10),
-    FOREIGN KEY (participation_id) REFERENCES EVENT_PARTICIPATION(participation_id)
+    response VARCHAR(50) NULL,
+    numerical_rating INT NULL,
+    FOREIGN KEY (participation_id) REFERENCES event_participation(participation_id) ON DELETE CASCADE
 );
 
 -- =============================================
@@ -205,19 +230,19 @@ CREATE TABLE EVENT_EVALUATION (
 -- =============================================
 
 -- SPONSOR: Stores sponsor details
-CREATE TABLE SPONSOR (
-    sponsor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE sponsor (
+    sponsor_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    instagram_url VARCHAR(255)
+    instagram_url VARCHAR(255) NULL
 );
 
 -- EVENT_SPONSOR: Maps sponsors to events
-CREATE TABLE EVENT_SPONSOR (
-    event_id INT,
-    sponsor_id INT,
+CREATE TABLE event_sponsor (
+    event_id BIGINT UNSIGNED NOT NULL,
+    sponsor_id BIGINT UNSIGNED NOT NULL,
     PRIMARY KEY (event_id, sponsor_id),
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (sponsor_id) REFERENCES SPONSOR(sponsor_id)
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE,
+    FOREIGN KEY (sponsor_id) REFERENCES sponsor(sponsor_id) ON DELETE CASCADE
 );
 
 -- =============================================
@@ -225,74 +250,88 @@ CREATE TABLE EVENT_SPONSOR (
 -- =============================================
 
 -- SOCIAL_MEDIA: Tracks organization's social media accounts
-CREATE TABLE SOCIAL_MEDIA (
-    social_media_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE social_media (
+    social_media_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     platform VARCHAR(50) NOT NULL,
     url VARCHAR(255) NOT NULL UNIQUE
 );
 
 -- TASK: Tracks tasks (e.g., captions, pubmats, postings)
-CREATE TABLE TASK (
-    task_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT,
+CREATE TABLE task (
+    task_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NULL,
     task_name VARCHAR(100) NOT NULL,
-    officer_id INT,
-    deadline DATE,
-    date_posted DATE,
-    time_posted TIME,
-    status VARCHAR(50),
-    link VARCHAR(255),
-    category VARCHAR(50),
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (officer_id) REFERENCES USER(user_id)
+    officer_id VARCHAR(20) NULL,
+    deadline DATE NULL,
+    date_posted DATE NULL,
+    time_posted TIME NULL,
+    status VARCHAR(50) NULL,
+    link VARCHAR(255) NULL,
+    category VARCHAR(50) NULL,
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE SET NULL,
+    FOREIGN KEY (officer_id) REFERENCES user(student_number) ON DELETE SET NULL
 );
 
 -- =============================================
 -- Financial Management
 -- =============================================
 
--- =============================================
--- Transaction Type Table
--- =============================================
+-- TRANSACTION_TYPE: Transaction categories
 CREATE TABLE transaction_type (
-    type_id INT AUTO_INCREMENT PRIMARY KEY,
-    type_name VARCHAR(50) UNIQUE NOT NULL,
-    direction ENUM('income','outcome') NOT NULL
+    type_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL UNIQUE,
+    direction ENUM('income', 'outcome') NOT NULL
 );
 
--- Seed transaction types
-INSERT INTO transaction_type (type_name, direction) VALUES
-    ('FRA Payment', 'income'),
-    ('Event Fee', 'income'),
-    ('Purchase', 'outcome'),
-    ('Refund', 'outcome'),
-    ('Penalty', 'income');
-
 -- TRANSACTION: Records cash-based transactions
-CREATE TABLE TRANSACTION (
-    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT,
-    type_id INT,
+CREATE TABLE transaction (
+    transaction_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NULL,
+    type_id BIGINT UNSIGNED NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    description TEXT,
-    receipt_photo VARCHAR(255),
+    description TEXT NULL,
+    receipt_photo VARCHAR(255) NULL,
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    recorded_by INT,
-    verified_by INT,
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (type_id) REFERENCES transaction_type(type_id),
-    FOREIGN KEY (recorded_by) REFERENCES USER(user_id),
-    FOREIGN KEY (verified_by) REFERENCES USER(user_id)
+    student_number VARCHAR(20) NOT NULL,
+    verified_by VARCHAR(20) NULL,
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE SET NULL,
+    FOREIGN KEY (type_id) REFERENCES transaction_type(type_id) ON DELETE RESTRICT,
+    FOREIGN KEY (student_number) REFERENCES student(student_number),
+    FOREIGN KEY (verified_by) REFERENCES user(student_number) ON DELETE SET NULL
 );
 
 -- FINANCIAL_RECORD: Links transactions to events or other entities
-CREATE TABLE FINANCIAL_RECORD (
-    financial_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT,
-    transaction_id INT,
-    description TEXT,
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id),
-    FOREIGN KEY (transaction_id) REFERENCES TRANSACTION(transaction_id)
+CREATE TABLE financial_record (
+    financial_record_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NULL,
+    transaction_id BIGINT UNSIGNED NOT NULL,
+    description TEXT NULL,
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE SET NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transaction(transaction_id) ON DELETE CASCADE
+);
+
+-- EVENT_BUDGET: Event-specific budgets
+CREATE TABLE event_budget (
+    event_budget_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id BIGINT UNSIGNED NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    description VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY unique_event_budget (event_id),
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE
+);
+
+-- ORGANIZATION_BUDGET: Organization-wide budgets per academic year
+CREATE TABLE organization_budget (
+    org_budget_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    academic_year_id BIGINT UNSIGNED NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    description VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    UNIQUE KEY unique_org_budget (academic_year_id),
+    FOREIGN KEY (academic_year_id) REFERENCES academic_year(academic_year_id) ON DELETE CASCADE
 );
 
 -- =============================================
@@ -300,9 +339,9 @@ CREATE TABLE FINANCIAL_RECORD (
 -- =============================================
 
 -- INVENTORY_ITEM: Tracks organization assets
-CREATE TABLE INVENTORY_ITEM (
-    item_id INT AUTO_INCREMENT PRIMARY KEY,
-    item_name VARCHAR(100) NOT NULL,
+CREATE TABLE inventory_item (
+    item_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    item_name VARCHAR(100) NOT NULL UNIQUE,
     quantity_total INT NOT NULL,
     quantity_used INT DEFAULT 0,
     quantity_added INT DEFAULT 0,
@@ -311,29 +350,29 @@ CREATE TABLE INVENTORY_ITEM (
 );
 
 -- ITEM_CONDITION: Tracks item condition
-CREATE TABLE ITEM_CONDITION (
-    condition_id INT AUTO_INCREMENT PRIMARY KEY,
-    item_id INT,
-    condition_description TEXT,
+CREATE TABLE item_condition (
+    condition_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    item_id BIGINT UNSIGNED NOT NULL,
+    condition_description TEXT NULL,
     recorded_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    recorded_by INT,
-    FOREIGN KEY (item_id) REFERENCES INVENTORY_ITEM(item_id),
-    FOREIGN KEY (recorded_by) REFERENCES USER(user_id)
+    recorded_by VARCHAR(20) NULL,
+    FOREIGN KEY (item_id) REFERENCES inventory_item(item_id) ON DELETE CASCADE,
+    FOREIGN KEY (recorded_by) REFERENCES user(student_number) ON DELETE SET NULL
 );
 
 -- ITEM_BORROWING: Records borrowing history
-CREATE TABLE ITEM_BORROWING (
-    borrowing_id INT AUTO_INCREMENT PRIMARY KEY,
-    item_id INT,
-    student_id INT,
+CREATE TABLE item_borrowing (
+    borrowing_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    item_id BIGINT UNSIGNED NOT NULL,
+    student_number VARCHAR(20) NOT NULL,
     borrow_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    return_date TIMESTAMP,
-    condition_id_borrow INT,
-    condition_id_return INT,
-    FOREIGN KEY (item_id) REFERENCES INVENTORY_ITEM(item_id),
-    FOREIGN KEY (student_id) REFERENCES STUDENT(student_id),
-    FOREIGN KEY (condition_id_borrow) REFERENCES ITEM_CONDITION(condition_id),
-    FOREIGN KEY (condition_id_return) REFERENCES ITEM_CONDITION(condition_id)
+    return_date TIMESTAMP NULL,
+    condition_id_borrow BIGINT UNSIGNED NULL,
+    condition_id_return BIGINT UNSIGNED NULL,
+    FOREIGN KEY (item_id) REFERENCES inventory_item(item_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_number) REFERENCES student(student_number) ON DELETE CASCADE,
+    FOREIGN KEY (condition_id_borrow) REFERENCES item_condition(condition_id) ON DELETE SET NULL,
+    FOREIGN KEY (condition_id_return) REFERENCES item_condition(condition_id) ON DELETE SET NULL
 );
 
 -- =============================================
@@ -341,129 +380,118 @@ CREATE TABLE ITEM_BORROWING (
 -- =============================================
 
 -- TRANSACTION_LOG: Comprehensive audit trail
-CREATE TABLE TRANSACTION_LOG (
-    log_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+CREATE TABLE transaction_log (
+    log_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    student_number VARCHAR(20) NULL,
     action VARCHAR(100) NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     entity_id INT NOT NULL,
-    before_state TEXT,
-    after_state TEXT,
+    before_state TEXT NULL,
+    after_state TEXT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id)
+    FOREIGN KEY (student_number) REFERENCES user(student_number) ON DELETE SET NULL
 );
 
 -- =============================================
--- Event Budget Table
+-- Laravel Sanctum Personal Access Tokens
 -- =============================================
-CREATE TABLE event_budget (
-    event_budget_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT NOT NULL,
-    amount DECIMAL(12,2) NOT NULL,
-    description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE (event_id),
-    FOREIGN KEY (event_id) REFERENCES EVENT(event_id)
-);
 
--- =============================================
--- Organization Budget Table
--- =============================================
-CREATE TABLE organization_budget (
-    org_budget_id INT AUTO_INCREMENT PRIMARY KEY,
-    academic_year_id INT NOT NULL,
-    amount DECIMAL(12,2) NOT NULL,
-    description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE (academic_year_id),
-    FOREIGN KEY (academic_year_id) REFERENCES ACADEMIC_YEAR(academic_year_id)
+CREATE TABLE personal_access_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tokenable_type VARCHAR(255) NOT NULL,
+    tokenable_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    abilities TEXT NULL,
+    last_used_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX personal_access_tokens_tokenable_type_tokenable_id_index (tokenable_type, tokenable_id)
 );
 
 -- =============================================
 -- Indexes for Performance Optimization
 -- =============================================
 
--- USER table
-CREATE UNIQUE INDEX idx_user_email ON USER(email);
+-- User and authentication indexes
+CREATE INDEX idx_user_status ON user(status);
+CREATE INDEX idx_student_email ON student(email);
+CREATE INDEX idx_student_academic_status ON student(academic_status);
 
--- STUDENT table
-CREATE UNIQUE INDEX idx_student_number ON STUDENT(student_number);
-CREATE INDEX idx_student_userid ON STUDENT(student_id);
+-- Role and permission indexes
+CREATE INDEX idx_user_role_student ON user_role(student_number);
+CREATE INDEX idx_user_role_academic_year ON user_role(academic_year_id);
+CREATE INDEX idx_role_permission_role ON role_permission(role_id);
+CREATE INDEX idx_user_role_permission_user_role ON user_role_permission(user_role_id);
 
--- USER_ROLE table
-CREATE INDEX idx_userrole_userid ON USER_ROLE(user_id);
-CREATE INDEX idx_userrole_roleid ON USER_ROLE(role_id);
-CREATE INDEX idx_userrole_academicyearid ON USER_ROLE(academic_year_id);
+-- Class management indexes
+CREATE INDEX idx_class_academic_year ON class(academic_year_id);
+CREATE INDEX idx_class_president ON class(class_president_id);
+CREATE INDEX idx_class_subject_class ON class_subject(class_id);
+CREATE INDEX idx_class_schedule_class ON class_schedule(class_id);
+CREATE INDEX idx_class_schedule_subject ON class_schedule(subject_id);
+CREATE INDEX idx_class_professor_class ON class_professor(class_id);
+CREATE INDEX idx_student_class_student ON student_class(student_number);
+CREATE INDEX idx_student_class_class ON student_class(class_id);
 
--- USER_ROLE_PERMISSION table
-CREATE INDEX idx_userrolepermission_userroleid ON USER_ROLE_PERMISSION(user_role_id);
-CREATE INDEX idx_userrolepermission_permissionid ON USER_ROLE_PERMISSION(permission_id);
+-- Event management indexes
+CREATE INDEX idx_event_status ON event(status_id);
+CREATE INDEX idx_event_created_by ON event(created_by);
+CREATE INDEX idx_event_date ON event(event_date);
+CREATE INDEX idx_event_registration_event ON event_registration(event_id);
+CREATE INDEX idx_event_registration_student ON event_registration(student_number);
+CREATE INDEX idx_event_participation_event ON event_participation(event_id);
+CREATE INDEX idx_event_participation_student ON event_participation(student_number);
+CREATE INDEX idx_event_evaluation_participation ON event_evaluation(participation_id);
 
--- ROLE_PERMISSION table
-CREATE INDEX idx_rolepermission_roleid ON ROLE_PERMISSION(role_id);
-CREATE INDEX idx_rolepermission_permissionid ON ROLE_PERMISSION(permission_id);
+-- Financial indexes
+CREATE INDEX idx_transaction_event ON transaction(event_id);
+CREATE INDEX idx_transaction_type ON transaction(type_id);
+CREATE INDEX idx_transaction_student ON transaction(student_number);
+CREATE INDEX idx_transaction_verified_by ON transaction(verified_by);
+CREATE INDEX idx_transaction_date ON transaction(transaction_date);
+CREATE INDEX idx_financial_record_event ON financial_record(event_id);
+CREATE INDEX idx_financial_record_transaction ON financial_record(transaction_id);
 
--- STUDENT_CLASS table
-CREATE INDEX idx_studentclass_studentid ON STUDENT_CLASS(student_id);
-CREATE INDEX idx_studentclass_classid ON STUDENT_CLASS(class_id);
-CREATE INDEX idx_studentclass_academicyearid ON STUDENT_CLASS(academic_year_id);
+-- Inventory indexes
+CREATE INDEX idx_item_condition_item ON item_condition(item_id);
+CREATE INDEX idx_item_condition_recorded_by ON item_condition(recorded_by);
+CREATE INDEX idx_item_borrowing_item ON item_borrowing(item_id);
+CREATE INDEX idx_item_borrowing_student ON item_borrowing(student_number);
+CREATE INDEX idx_item_borrowing_borrow_date ON item_borrowing(borrow_date);
 
--- CLASS table
-CREATE INDEX idx_class_academicyearid ON CLASS(academic_year_id);
+-- Audit indexes
+CREATE INDEX idx_transaction_log_student ON transaction_log(student_number);
+CREATE INDEX idx_transaction_log_entity ON transaction_log(entity_type, entity_id);
+CREATE INDEX idx_transaction_log_action_date ON transaction_log(action_date);
 
--- EVENT table
-CREATE INDEX idx_event_statusid ON EVENT(status_id);
-CREATE INDEX idx_event_createdby ON EVENT(created_by);
+-- =============================================
+-- Sample Data (Optional)
+-- =============================================
 
--- EVENT_REGISTRATION table
-CREATE INDEX idx_eventreg_eventid ON EVENT_REGISTRATION(event_id);
-CREATE INDEX idx_eventreg_studentid ON EVENT_REGISTRATION(student_id);
+-- Insert sample transaction types
+INSERT INTO transaction_type (type_name, direction) VALUES
+    ('FRA Payment', 'income'),
+    ('Event Fee', 'income'),
+    ('Purchase', 'outcome'),
+    ('Refund', 'outcome'),
+    ('Penalty', 'income');
 
--- EVENT_PARTICIPATION table
-CREATE INDEX idx_eventpart_eventid ON EVENT_PARTICIPATION(event_id);
-CREATE INDEX idx_eventpart_studentid ON EVENT_PARTICIPATION(student_id);
-
--- EVENT_EVALUATION table
-CREATE INDEX idx_eventeval_participationid ON EVENT_EVALUATION(participation_id);
-
--- TRANSACTION table
-CREATE INDEX idx_transaction_eventid ON TRANSACTION(event_id);
-CREATE INDEX idx_transaction_typeid ON TRANSACTION(type_id);
-CREATE INDEX idx_transaction_recordedby ON TRANSACTION(recorded_by);
-CREATE INDEX idx_transaction_verifiedby ON TRANSACTION(verified_by);
-
--- FINANCIAL_RECORD table
-CREATE INDEX idx_financialrecord_eventid ON FINANCIAL_RECORD(event_id);
-CREATE INDEX idx_financialrecord_transactionid ON FINANCIAL_RECORD(transaction_id);
-
--- ITEM_CONDITION table
-CREATE INDEX idx_itemcondition_itemid ON ITEM_CONDITION(item_id);
-CREATE INDEX idx_itemcondition_recordedby ON ITEM_CONDITION(recorded_by);
-
--- ITEM_BORROWING table
-CREATE INDEX idx_itemborrowing_itemid ON ITEM_BORROWING(item_id);
-CREATE INDEX idx_itemborrowing_studentid ON ITEM_BORROWING(student_id);
-CREATE INDEX idx_itemborrowing_conditionid_borrow ON ITEM_BORROWING(condition_id_borrow);
-CREATE INDEX idx_itemborrowing_conditionid_return ON ITEM_BORROWING(condition_id_return);
-
--- TRANSACTION_LOG table
-CREATE INDEX idx_transactionlog_userid ON TRANSACTION_LOG(user_id);
-
--- Add indexes for new tables
-CREATE UNIQUE INDEX idx_eventbudget_eventid ON event_budget(event_id);
-CREATE UNIQUE INDEX idx_orgbudget_academicyearid ON organization_budget(academic_year_id);
-
--- =====================
--- CONSTRAINTS (if not already present)
--- =====================
-ALTER TABLE STUDENT ADD CONSTRAINT uq_student_number UNIQUE (student_number);
-ALTER TABLE USER ADD CONSTRAINT uq_user_email UNIQUE (email);
-ALTER TABLE CLASS ADD CONSTRAINT uq_class_classname UNIQUE (class_name);
-ALTER TABLE INVENTORY_ITEM ADD CONSTRAINT uq_inventoryitem_itemname UNIQUE (item_name);
+-- Insert sample event statuses
+INSERT INTO event_status (status_name) VALUES
+    ('Planning'),
+    ('Registration Open'),
+    ('Registration Closed'),
+    ('In Progress'),
+    ('Completed'),
+    ('Cancelled');
 
 -- =============================================
 -- Notes
 -- =============================================
--- 'Event Fee' is used for payments collected from students for participation in events. It is classified as 'income'. 
+-- This schema matches the Laravel migrations structure
+-- All tables use student_number as the primary identifier for students
+-- Foreign key relationships are properly defined with appropriate cascade/restrict behaviors
+-- Indexes are created for optimal query performance
+-- The schema supports a complete student organization management system
