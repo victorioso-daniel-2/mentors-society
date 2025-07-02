@@ -56,7 +56,7 @@
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-peso-sign"></i> Financial</a></li>
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-boxes-stacked"></i> Inventory</a></li>
                 <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-file-lines"></i> Report</a></li>
-                <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-gear"></i> System</a></li>
+                <li><a href="/system-panel" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-gray-700 hover:bg-gray-100"><span class="sidebar-indicator"></span><i class="fa-solid fa-gear"></i> System</a></li>
             </ul>
         </nav>
         <button id="logoutBtn" class="mt-8 flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-lg text-red-600 hover:bg-red-50 transition-colors"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>

@@ -279,7 +279,7 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'role_id' => 'required|exists:role,role_id',
-            'academic_year_id' => 'required|exists:academic_year,academic_year_id',
+            'academic_year_id' => 'nullable|exists:academic_year,academic_year_id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date'
         ]);
@@ -290,20 +290,22 @@ class UserController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $existingRole = UserRole::where('student_number', $student_number)
-            ->where('role_id', $request->role_id)
-            ->where('academic_year_id', $request->academic_year_id)
-            ->first();
+        $existingRoleQuery = UserRole::where('student_number', $student_number)
+            ->where('role_id', $request->role_id);
+        if ($request->filled('academic_year_id')) {
+            $existingRoleQuery->where('academic_year_id', $request->academic_year_id);
+        }
+        $existingRole = $existingRoleQuery->first();
         if ($existingRole) {
             return response()->json([
                 'success' => false,
-                'message' => 'User already has this role for the specified academic year'
+                'message' => 'User already has this role' . ($request->filled('academic_year_id') ? ' for the specified academic year' : '')
             ], 422);
         }
         $userRole = UserRole::create([
             'student_number' => $student_number,
             'role_id' => $request->role_id,
-            'academic_year_id' => $request->academic_year_id,
+            'academic_year_id' => $request->academic_year_id ?? null,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date
         ]);

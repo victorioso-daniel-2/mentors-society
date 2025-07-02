@@ -166,6 +166,8 @@ class AuthController extends Controller
                 ], 401);
             }
             $student = Student::where('student_number', $user->student_number)->first();
+            // Get user roles (with academic year info)
+            $roles = $user->roles()->get();
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -175,7 +177,16 @@ class AuthController extends Controller
                         'last_name' => $student ? $student->last_name : null,
                         'middle_initial' => $student ? $student->middle_initial : null,
                         'email' => $student ? $student->email : null,
-                    ]
+                    ],
+                    'roles' => $roles->map(function ($role) {
+                        return [
+                            'role_id' => $role->role_id,
+                            'role_name' => $role->role_name,
+                            'academic_year_id' => $role->pivot->academic_year_id ?? null,
+                            'start_date' => $role->pivot->start_date ?? null,
+                            'end_date' => $role->pivot->end_date ?? null,
+                        ];
+                    }),
                 ]
             ], 200);
         } catch (\Exception $e) {

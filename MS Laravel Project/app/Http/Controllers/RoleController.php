@@ -313,4 +313,66 @@ class RoleController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Assign an officer role to a student, copying academic_year_id from the president
+     */
+    public function assignOfficer(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'student_number' => 'required|exists:user,student_number',
+            'role_id' => 'required|exists:role,role_id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Get the current user (president) and their academic_year_id
+        $currentUser = auth()->user();
+        if (!$currentUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Find the president's user_role with an active academic_year_id
+        $presidentUserRole = $currentUser->userRoles()
+            ->whereHas('role', function($q) {
+                $q->where('role_name', 'President');
+            })
+            ->where('start_date', '<=', now())
+            ->where(function($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->latest('start_date')
+            ->first();
+
+        if (!$presidentUserRole) {
+            return response()->json([
+                'success' => false,
+                'message' => 'President role not found for current user'
+            ], 404);
+        }
+
+        // Assign the officer role to the student
+        $officerUserRole = \App\Models\UserRole::create([
+            'student_number' => $request->student_number,
+            'role_id' => $request->role_id,
+            'academic_year_id' => $presidentUserRole->academic_year_id,
+            'start_date' => now(),
+            'end_date' => null
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $officerUserRole,
+            'message' => 'Officer assigned successfully'
+        ]);
+    }
 } 

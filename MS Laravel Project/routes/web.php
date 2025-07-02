@@ -28,3 +28,7 @@ Route::get('/dashboard', function () {
 Route::get('/student-dashboard', function () {
     return view('student_dashboard');
 });
+
+Route::get('/system-panel', function () {
+    return view('system_panel');
+})->name('system.panel');

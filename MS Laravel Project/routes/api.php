@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/permissions', [RoleController::class, 'getPermissions']);
         Route::post('/{id}/permissions', [RoleController::class, 'assignPermissions']);
         Route::get('/permissions/all', [RoleController::class, 'getAllPermissions']);
+        Route::post('/assign-officer', [RoleController::class, 'assignOfficer']);
     });
 
     // Route::prefix('permissions')->group(function () {
